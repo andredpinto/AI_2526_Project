@@ -37,6 +37,11 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
         return s
     
     def isFinished(self) -> bool:
+        #TODO: Case where pop creates tow 4-in-a-rows: player who made the pop wins;
+        # Case where board is full and player decides to end the game
+        # Finnaly, draw case: same state repeated 3 times (either player can declare draw)
+        # Estas são as regras descritas no documento
+        # Talvez seja preciso adicionar uma variável para perceber de quem é o turno
         if self.last_move[0]==-1: return False  # No plays yet; change this if initialization is changed
         col = self.last_move[0]
         row = self.last_move[1]

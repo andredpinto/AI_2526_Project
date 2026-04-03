@@ -74,6 +74,33 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
         if self.b[col][row] != player: return count    # reached empty or adversary position
         return self._checker(count+1, col+col_step, row+row_step, col_step, row_step, player) 
 
+    def possible_states(self, curr_player: str)-> list:
+        poss_states= []
+
+        for col in range(self.cols):
+            if self.heights[col]<self.rows: #verifica se é possível colocar mais uma peça na posição
+                new_board= Board()
+
+                for j in range(self.cols):  
+                    new_board.heights[j]= self.heights[j]
+                    for k in range(self.rows): new_board.b[j][k]= self.b[j][k]
+                    
+                new_board.drop(col, curr_player)
+                poss_states.append(new_board)
+                #print(new_board)
+            
+            if self.b[col][0]== curr_player:  # verifica se posso retirar
+                new_board= Board()
+
+                for j in range(self.cols):  
+                    new_board.heights[j]= self.heights[j]
+                    for k in range(self.rows): new_board.b[j][k]= self.b[j][k]                 
+
+                new_board.pop(col)
+                poss_states.append(new_board)
+                #print(new_board)
+
+        return poss_states
 
 
 if __name__ == "__main__":

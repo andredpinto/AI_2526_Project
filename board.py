@@ -103,6 +103,25 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
         return poss_states
 
 
+    #assumes that type is lowercase
+    def is_valid_move(self, type, col, player):
+        if (col<0 or col>=self.cols): return False
+        if (type=="drop"):
+            return (self.heights[col] < self.rows)
+        elif (type=="pop"):
+            return (self.b[col][0]==player)
+        return False #o type nao é "drop" ou "pop"
+
+            
+
+    #assumes a valid move
+    def apply_move(self, type, col, player):
+        if (type=="drop"):
+            self.drop(col, player)
+        else: #type=="pop"
+            self.pop(col)
+
+
 if __name__ == "__main__":
     #so alguns testes:
     board_vertical_win = [

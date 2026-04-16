@@ -2,17 +2,16 @@
 class Board: #tabuleiro de connect4 com var. de dar pop out
     #possiveis otimizacoes:
         # usar numpy arrays?
-        # colocar ints em vez de strings?
     def __init__(self, rows=6, cols=7, board=None):
         self.rows = rows
         self.cols = cols
         self.heights = [0] * cols
         if board==None:
-            self.b = [["-" ] * rows for _ in range(cols)] # cada lista é uma coluna, por tanto primeiro acedemos as colunas e dps às linhas
+            self.b = [[0 ] * rows for _ in range(cols)] # cada lista é uma coluna, por tanto primeiro acedemos as colunas e dps às linhas
         else: self.b = board
         self.last_move = (-1, -1) #(col, row) quando se faz pop, o valor da linha fica -1
 
-    def drop(self, col, player:str): # col toma valores de 0 a cols-1(6)
+    def drop(self, col, player:int): # col toma valores de 0 a cols-1(6)
         h = self.heights[col]
         self.b[col][h] = player
         self.last_move = (col, h)
@@ -21,16 +20,17 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
     def pop(self, col):
         for i in range(self.heights[col]-1):
             self.b[col][i] = self.b[col][i+1]
-        self.b[col][self.heights[col]-1] = "-" #para nao aceder a zonas inexistentes no array
+        self.b[col][self.heights[col]-1] = 0 #para nao aceder a zonas inexistentes no array
         self.heights[col] -=1
         self.last_move = (col,-1)
 
     def __str__(self):
+        dict = {0:"-", 1:"X", -1:"O"}
         s = "|1|2|3|4|5|6|7|\n---------------\n"
         for i in range(self.rows-1, -1, -1): #para imprimir temos de percorrer para cada linha
             s+="|"
             for j in range(self.cols):       # todas as colunas
-                s+= self.b[j][i]
+                s+= dict[self.b[j][i]]
                 s+="|"
             s += "\n"
         s+="---------------\n"
@@ -56,7 +56,7 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
         # checks if position (col, line) contains 4 (or more) of the same elements in a row
         # assumes self.b[col][line] is a valid position
         player = self.b[col][row]
-        if player == "-": return False
+        if player == 0: return False
         directions = ((1,0), (0,1), (1,1), (1,-1))
         # vertical, horizontal, main diagonal and sec diagonal
         for dir in directions:
@@ -68,13 +68,13 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
             if result >= 4: return True
         return False
 
-    def _checker(self, count:int, col:int, row:int, col_step:int, row_step:int, player:str) -> int:
+    def _checker(self, count:int, col:int, row:int, col_step:int, row_step:int, player:int) -> int:
         # checks recursively how many elements are in a row from a certain position
         if col<0 or col>=self.cols or row<0 or row>=self.rows: return count   # reached edge of board
         if self.b[col][row] != player: return count    # reached empty or adversary position
         return self._checker(count+1, col+col_step, row+row_step, col_step, row_step, player) 
 
-    def possible_states(self, curr_player: str)-> list:
+    def possible_states(self, curr_player: int)-> list:
         poss_states= []
 
         for col in range(self.cols):

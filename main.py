@@ -5,12 +5,15 @@ from game import Game
 def main():
     print("Choose game mode:")
     print("1 - Human vs Human")
+    print("2 - Human vs MCTS")
+    print("3 - MCTS vs MCTS")
     mode = int(input().strip())
     if (mode==1):
         Game("human", "human").run()
-    # else if (mode==2):
-    #
-    # else if mode==3:
+    elif (mode==2):
+        Game("human", "mcts").run()
+    elif mode==3:
+        Game("mcts", "mcts").run()
 
 
 if __name__=="__main__":

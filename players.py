@@ -78,8 +78,19 @@ def simulate(board, player):
     #estado inicial -> tabulerio vazio->queremos esoclher a melhor jogada para o X, mas é o O a jogar
     while not board.isFinished(player):
         next_states = board.possible_states(player)
-        board = random.choice(next_states)
+        winning_state = None
+        
+        for state in next_states:
+            # verifica se este estado resulta numa vitória para o jogador atual
+            if state.winner(player) == player:
+                winning_state = state
+                break 
+        if winning_state is not None:
+            board = winning_state #escolhe a jogada vencedora
+        else:
+            board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
         player *=-1
+        
     winner = board.winner(player)
     if winner == 0:
         return 0

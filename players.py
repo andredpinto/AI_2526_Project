@@ -10,13 +10,15 @@ def human_move(board, player):
         #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
         #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
         if (len(move)!=2):
-            print("nono")
+            print("Invalid move, try again")
             continue
         type = move[0]
         col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
         if (board.is_valid_move(type, col, player)):
             board.apply_move(type, col, player)
             return
+        else:
+            print("Invalid move, try again")
 
 #Class node for the monte carlo tree search
 class Node:

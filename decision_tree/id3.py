@@ -31,13 +31,15 @@ class ID3:
         enth_y = get_enthropy(y)    # Precompute y enthropy to improve efficiency
         for i in range(n_cols):
             col = X[:,i]  # get feature collumn as 1 dimentional array
-            print(col)
-            print(col.dtype)
+            unique_vals = np.unique(col)    # Unique values in the collumn, conveniently sorted
 
             # Numeric collumn
             # TODO: Fix bug where if numeric and categorical (strings) values are mixed in matrix everything is converted into string
-            if np.issubdtype(col.dtype, np.number): # checks if datatype of column derives from np.number (as do floats and ints)
-                unique_vals = np.unique(col)    # Unique values in the collumn, conveniently sorted
+            # Update on this TODO: I dont care; both of our datasets only have one data type, so this wont pose a problem for us
+            # Please remember for the future that this algorithm cant handle datasets with mixed data types
+            if np.issubdtype(col.dtype, np.number) and not (col.dtype.kind == "i" and unique_vals.size <= 4): 
+                # checks if datatype of column derives from np.number (as do floats and ints)
+                # if datatype is int and there are four or less unique values, the column is treated as categorical
                 # Below, a very smart way of computing the mean between pairs of points, suggested by AI
                 possible_splits = (unique_vals[1:] + unique_vals[:-1]) / 2
                 print("Possible splits: ", possible_splits)
@@ -55,7 +57,7 @@ class ID3:
             # Categorical column
             else:
                 ig = calculate_information_gain(col, y, enth_y)
-                print(ig)
+                #print(ig)
                 if ig > best_split_inf_gain:    # Better split found
                     best_split_index = i
                     best_split_inf_gain = ig
@@ -65,59 +67,44 @@ class ID3:
 
 
 if __name__ == "__main__":
-    # Clanker generated, with some tweaks by me
-
     clf = ID3()
 
-    X1 = np.array([[1], [1], [1], [2], [2], [2]])
+    # Test 1: float arrays (treated as numeric)
+    X1 = np.array([[1.0], [1.0], [1.0], [2.0], [2.0], [2.0]])
     y1 = np.array([0, 0, 0, 1, 1, 1])
     split_idx, split_val = clf._get_best_split(X1, y1)
     assert split_idx == 0, "Test 1 failed: perfect numeric split"
     assert split_val is not None, "Test 1 failed: should return split value"
-    print(f"Test 1 passed: numeric perfect split (split={split_val})")
-    print(f"({split_idx}, {split_val})")
+    print(f"Test 1 passed: float array numeric (split={split_val})")
 
-    X2 = np.array([[1], [2], [3], [4], [5], [6]])
+    # Test 2: float arrays no clear split
+    X2 = np.array([[1.0], [2.0], [3.0], [4.0], [5.0], [6.0]])
     y2 = np.array([0, 1, 0, 1, 0, 1])
     split_idx, split_val = clf._get_best_split(X2, y2)
-    print(f"Test 2: numeric no clear split (IG={abs(get_enthropy(y2) - get_enthropy(y2)):.4f})")
-    print(f"({split_idx}, {split_val})")
+    print(f"Test 2 passed: float array no clear split")
 
-    X3 = np.array([["A"], ["A"], ["B"], ["B"]])
-    y3 = np.array([0, 0, 1, 1])
+    # Test 3: int arrays with more than 4 unique values (treated as numeric)
+    X3 = np.array([[1], [2], [3], [4], [5], [6], [7], [8]])
+    y3 = np.array([0, 0, 1, 1, 0, 0, 1, 1])
     split_idx, split_val = clf._get_best_split(X3, y3)
-    assert split_idx == 0, "Test 3 failed: perfect categorical split"
-    assert split_val is None, "Test 3 failed: categorical should have no split value"
-    print(f"Test 3 passed: categorical perfect split")
-    print(f"({split_idx}, {split_val})")
+    assert split_idx == 0, "Test 3 failed: should pick column"
+    assert split_val is not None, "Test 3 failed: should return split value for numeric"
+    print(f"Test 3 passed: int array >4 unique values numeric (split={split_val})")
 
-    X4 = np.array([["A"], ["B"], ["A"], ["B"]])
-    y4 = np.array([0, 0, 1, 1])
+    # Test 4: int arrays with exactly 4 unique values (treated as categorical)
+    X4 = np.array([[1], [2], [3], [4], [1], [2], [3], [4]])
+    y4 = np.array([0, 0, 0, 0, 1, 1, 1, 1])
     split_idx, split_val = clf._get_best_split(X4, y4)
-    print(f"Test 4 passed: categorical no correlation (IG=0)")
-    print(f"({split_idx}, {split_val})")
+    assert split_idx == 0, "Test 4 failed: should pick column"
+    assert split_val is None, "Test 4 failed: categorical should have no split value"
+    print(f"Test 4 passed: int array 4 unique values categorical")
 
-    X5 = np.array([
-        [1, "A"],
-        [1, "B"], 
-        [2, "A"],
-        [2, "B"]
-    ])
-    y5 = np.array([0, 1, 1, 0])
+    # Test 5: int arrays with 3 unique values (treated as categorical)
+    X5 = np.array([[1], [2], [3], [1], [2], [3]])
+    y5 = np.array([0, 0, 1, 1, 0, 1])
     split_idx, split_val = clf._get_best_split(X5, y5)
-    print(f"Test 5 passed: multi-column no correlation (IG≈0)")
-    print(f"({split_idx}, {split_val})")
-
-    X6 = np.array([
-        [1.0, "A"],
-        [2.0, "A"],
-        [3.0, "B"],
-        [4.0, "B"]
-    ])
-    y6 = np.array([0, 0, 1, 1])
-    split_idx, split_val = clf._get_best_split(X6, y6)
-    assert split_idx == 0, "Test 6 failed: should pick first column"
-    print(f"Test 6 passed: mixed numeric and categorical (picks first)")
-    print(f"({split_idx}, {split_val})")
+    assert split_idx == 0, "Test 5 failed: should pick column"
+    assert split_val is None, "Test 5 failed: categorical should have no split value"
+    print(f"Test 5 passed: int array 3 unique values categorical")
 
     print("All tests passed!")

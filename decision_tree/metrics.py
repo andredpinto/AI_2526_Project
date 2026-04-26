@@ -15,13 +15,19 @@ def get_enthropy(X:np.ndarray):
 
 def calculate_information_gain(X:np.ndarray, y:np.ndarray, y_enthropy=None):
     if X.size != y.size : raise ValueError("Arrays must have same size")
-    if not y_enthropy: y_enthropy = get_enthropy(y)
+    if y_enthropy is None: y_enthropy = get_enthropy(y)
     n = X.size
     values, counts = np.unique(X, return_counts=True)
     for i in range(values.size):
         # Here y_enthropy is used to save memory, losing the actual y_enthropy value
         y_enthropy -= counts[i]/n*get_enthropy(y[X==values[i]])
     return y_enthropy
+
+def check_valid(X:np.ndarray, y:np.ndarray):
+    """Makes some checks relevant for the decision tree logic"""
+    assert X.ndim == 2, "X must be two dimentional"
+    assert y.ndim == 1, "y must be one dimentional"
+    assert X.shape[0] == y.size, "X and y must have same number of entries"
 
 
 if __name__=="__main__":

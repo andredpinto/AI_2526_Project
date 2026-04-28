@@ -4,6 +4,9 @@ import random # nao vou fazer from random import choice, para ser mais claro qua
 # metese aqui um dicionario ao que corresponde cada nome que se escolhe para jogar no main
 # e dps as funcoes correspondentes
 
+# guardamos a raiz da árvore aqui
+mcts_root = None
+
 def human_move(board, player):
     while (True):
         move= input("drop/pop + collumn: ").lower().strip().split() #not case sensitive
@@ -79,24 +82,24 @@ def simulate(board, player):
     while not board.isFinished(player):
         next_states = board.possible_states(player)
         winning_state = None
-        
         for state in next_states:
             # verifica se este estado resulta numa vitória para o jogador atual
             if state.winner(player) == player:
                 winning_state = state
                 break 
+                
         if winning_state is not None:
             board = winning_state #escolhe a jogada vencedora
         else:
             board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
         player *=-1
-        
     winner = board.winner(player)
     if winner == 0:
         return 0
     if winner==start_player:
         return 1
     return -1 #bad for the player
+
 
 def backpropagate(node, res):
     while node:
@@ -120,12 +123,39 @@ def mcts_move(board, player, max_iter=1000):
     move = mcts(board, player, max_iter)
     board.apply_move(move[0], move[1], player)
 
-def mcts(board, player, max_iter):
-    root = Node(board, player)
+def sync_tree(board, player):
+    global mcts_root
+    
+    #se for a primeira jogada do jogo, criamos a raiz do zero
+    if mcts_root is None:
+        mcts_root = Node(board, player)
+        return
+
+    # precisamos de encontrar qual dos filhos da arvore anterior 
+    # corresponde ao estado atual do tabuleiro-depois da jogada do humano
+    curr_hash = board.hash_state(player)
+    
+    found = False
+    for child in mcts_root.children:
+        if child.state.hash_state(player) == curr_hash:
+            mcts_root = child
+            mcts_root.parent = None # cortamos a ligaçao
+            found = True
+            break
+            
+    #se o humano fez uma jogada que nao tinhamos explorado
+    if not found:
+        mcts_root = Node(board, player)
+
+
+def mcts(board, player, max_iter=1000):
+    global mcts_root
+    
+    sync_tree(board, player)
 
     for iter in range(max_iter):
         #comeca sempre na raiz
-        node = root
+        node = mcts_root
 
         #selecao:
         # esoclher uma folha na arvore, para isso tenho de ir percorrendo a arvore ate chegar a um no com filhos nao expandidos
@@ -141,11 +171,17 @@ def mcts(board, player, max_iter):
         #e backprop:
         backpropagate(node, res)
 
-    #e agora nao tenho o movimento, era melhor termos retornado os movimetnos em vez dos estados
-    #acho que vou so criar uma nova funcao para ver onde muda e com base nisso sabe-se qual foi o movimento
-    # e esquecime de tar a escrever em ingles
-    return infer_move_by_diff(root.state, root.best_n_child().state)
+    #escolha da melhor jogada
+    best_child = mcts_root.best_n_child()
 
+    #descobrimos qual foi o movimento feito para chegar a esse estado
+    move = infer_move_by_diff(mcts_root.state, best_child.state)
+    
+    #a raiz para a proxima jogada passa a ser este no
+    mcts_root = best_child
+    mcts_root.parent = None
+    
+    return move
 
 
 

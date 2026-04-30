@@ -1,5 +1,6 @@
 import math
 from board import Board
+from data_storage import save_to_dataset
 import random # nao vou fazer from random import choice, para ser mais claro quando eu usar esse metodo
 # metese aqui um dicionario ao que corresponde cada nome que se escolhe para jogar no main
 # e dps as funcoes correspondentes
@@ -180,7 +181,8 @@ def mcts(board, player, max_iter=1000):
     #a raiz para a proxima jogada passa a ser este no
     mcts_root = best_child
     mcts_root.parent = None
-    
+    # guarda o estado e a decisao para treinar a arvore de decisao mais tarde
+    save_to_dataset(board, player, move)
     return move
 
 

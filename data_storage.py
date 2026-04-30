@@ -1,10 +1,7 @@
 import csv
 import os
 
-move_dict = {
-    "drop_1": 0, "drop_2": 1, "drop_3": 2, "drop_4": 3, "drop_5": 4, "drop_6": 5, "drop_7": 6,
-    "pop_1": 7,  "pop_2": 8,  "pop_3": 9,  "pop_4": 10, "pop_5": 11, "pop_6": 12, "pop_7": 13
-}
+move_dict = {"drop_1": 0, "drop_2": 1, "drop_3": 2, "drop_4": 3, "drop_5": 4, "drop_6": 5, "drop_7": 6, "pop_1": 7,  "pop_2": 8,  "pop_3": 9,  "pop_4": 10, "pop_5": 11, "pop_6": 12, "pop_7": 13}
 
 #para saber se ja guardamos um estado igual antes, para evitar duplicados no dataset
 estados_guardados = set()

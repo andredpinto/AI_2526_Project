@@ -23,7 +23,7 @@ def human_move(board, player):
 
 #Class node for the monte carlo tree search
 class Node:
-    def __init__(self, state:Board, player, parent=None):
+    def __init__(self, state:Board, player, parent=None, child_limit=None):
         self.state = state
         self.parent = parent
         self.children = []
@@ -31,12 +31,21 @@ class Node:
         self.visits = 0
         self.player = player #player que vai jogar a seguir
         self.unexpanded_children_states = None
+        self.child_limit = child_limit
 
     def has_unexpanded_children_states(self):
         if self.state.isFinished(self.player):
             self.unexpanded_children_states = []
+
         elif self.unexpanded_children_states==None: # ainda so foi escolhido, nao explorado
-            self.unexpanded_children_states = self.state.possible_states(self.player)
+            states= self.state.possible_states(self.player)
+            random.shuffle(states)
+
+            if self.child_limit: #não é None
+                states = states[:self.child_limit] #in python there's no problem with child_limit being bigger than the length of the list
+
+            self.unexpanded_children_states = states
+
         return len(self.unexpanded_children_states) > 0
 
     def uct(self, c=math.sqrt(2)):
@@ -48,7 +57,7 @@ class Node:
     #assume que unexpanded_children_states != None e de []
     def expand(self):
         children_state = self.unexpanded_children_states.pop()
-        children_node = Node(children_state, self.player*-1, parent=self)
+        children_node = Node(children_state, self.player*-1, parent=self,child_limit=self.child_limit)
         self.children.append(children_node)
         return children_node
 
@@ -75,7 +84,7 @@ class Node:
         return best_node
 
 class MCTS:
-    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False, save_tree=False,max_iter=2000):
+    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=2000):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
@@ -85,6 +94,7 @@ class MCTS:
         self.save_to_dataset = save_to_dataset
         self.heuristic_win = heuristic_win
         self.heuristic_block_win = heuristic_block_win
+        self.child_limit = child_limit
         self.save_tree = save_tree
         self.max_iter=max_iter
         self.root = None
@@ -103,7 +113,7 @@ class MCTS:
     def sync_tree(self, board, player):
         #se for a primeira jogada do jogo, criamos a raiz do zero ou se save_tree=False
         if self.root is None or not self.save_tree:
-            self.root = Node(board, player)
+            self.root = Node(board, player, child_limit=self.child_limit)
             return
 
         # precisamos de encontrar qual dos filhos da arvore anterior 
@@ -117,21 +127,24 @@ class MCTS:
                 return#fuck readibility for some lines of code deleted hahaha
 
         #se o humano fez uma jogada que nao tinhamos explorado
-        self.root = Node(board, player)
+        self.root = Node(board, player, child_limit=self.child_limit)
 
     def simulate(self, board, player):
         start_player = -player # o player é o jogador que vai jogar agora, ams nos queremos avaliar para o que levou ao estado atual
         #estado inicial -> tabulerio vazio->queremos esoclher a melhor jogada para o X, mas é o O a jogar
+
         while not board.isFinished(player):
             next_states = board.possible_states(player)
             winning_state = None
             bad_states = [] #para bloquear uam vitoria do adversario, eu pensei em so remover da lista next_states, mas convem nao modificar uma lista enquanto itero por ela
+
             for state in next_states:
                 # verifica se este estado resulta numa vitória para o jogador atual
                 if self.heuristic_win:
                     if state.winner(player) == player:
                         winning_state = state
                         break 
+
                 #verifica se o estado resulta na vitoria do adversario(aquele caso especial de o pop fazer o adversario ganhar)
                 #e se existe algum estado depois deste estado em que o opp pode ganhar
                 if self.heuristic_block_win:
@@ -143,8 +156,9 @@ class MCTS:
                             bad_states.append(state)
                             break#este estado ja nao interessa, por tanto nao vamos explorar o resto dos estados que resultam deste
 
-            if winning_state is not None:
+            if winning_state is not None:#é garantido só correr se heuristic_win=True, porque só assim é que entra dentro do if que pode mudar o None
                 board = winning_state #escolhe a jogada vencedora
+
             elif self.heuristic_block_win:
                 if len(bad_states)==len(next_states):
                     #igual ao else (todos os estados levam a uma possivel vitoria do adversario, duvido sobre a possibilidade disto acontecer but you never know)
@@ -152,9 +166,12 @@ class MCTS:
                 else:
                     good_states = [state for state in next_states if state not in bad_states]
                     board = random.choice(good_states if len(good_states) > 0 else next_states)
+
             else:
                 board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
+
             player *=-1
+
         winner = board.winner(player)
         if winner == 0:
             return 0
@@ -222,10 +239,10 @@ players = {
     "mcts_heuristic_win":MCTS(heuristic_win=True).move, #selects win state during simulation
     "mcts_heuristic_block_win" : MCTS(heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
     "mcts_tree":MCTS(save_tree=True).move, #one of the above, but saving the tree
-    #how many children we can select:
-    #only test between them
-    # "mcts_select_2_children" : mcts_move,
-    # "mcts_select_4_children" : mcts_move,
-    # "mcts_select_8_children" : mcts_move,
-    # "mcts_select_all_children":mcts_move
+    #how many children we can select/add to the tree:
+    #only test between them i think
+    "mcts_select_2_children" : MCTS(child_limit=2).move,
+    "mcts_select_4_children" : MCTS(child_limit=4).move,
+    "mcts_select_8_children" : MCTS(child_limit=8).move,
+    "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
 }

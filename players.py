@@ -75,19 +75,17 @@ class Node:
         return best_node
 
 class MCTS:
-    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False, save_tree=False, no_cycles=False,max_iter=2000):
+    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False, save_tree=False,max_iter=2000):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
            save_tree - wheter the mcts keeps the tree or not\n
-           no_cycles - whether the mcts expands a children with a state already seen\n
            max_iter - iters for the mcts
         """
         self.save_to_dataset = save_to_dataset
         self.heuristic_win = heuristic_win
         self.heuristic_block_win = heuristic_block_win
         self.save_tree = save_tree
-        self.no_cycles = no_cycles
         self.max_iter=max_iter
         self.root = None
 
@@ -219,11 +217,10 @@ class MCTS:
 players = {
     "human" : human_move,
     #how to test all of this? problema para depois
-    "mcts_full" : MCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, no_cycles=True, max_iter=200).move,#block_win deixa muito lento
+    "mcts_full" : MCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, max_iter=200).move,#block_win deixa muito lento
     "mcts_simplest":MCTS().move,
     "mcts_heuristic_win":MCTS(heuristic_win=True).move, #selects win state during simulation
     "mcts_heuristic_block_win" : MCTS(heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
-    "mcts_no_cycles" : MCTS(no_cycles=True).move, #doesnt repeat states that are already in the tree
     "mcts_tree":MCTS(save_tree=True).move, #one of the above, but saving the tree
     #how many children we can select:
     #only test between them

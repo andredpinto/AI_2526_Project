@@ -1,10 +1,11 @@
 import numpy as np
 
 class DTNode:
-    def __init__(self, feature_index=None, children:dict=None, parent=None, enthropy=None, numerical=False, split=None, value=None):
+    def __init__(self, feature_index=None, children:dict=None, parent=None, majority=None, enthropy=None, numerical=False, split=None, value=None):
         """Feature index - index of the feature on the original dataset (collumn name)
         Children - dictionary with split values and corresponding node, like {'Yes':Node, 'No':Node}
         Parent - parent node
+        Majority - Majority class in that node, on the training dataset, in case the target's value is not in the node's children
         Enthropy - enthropy value on current node, not sure if it will be used, more for display reasons
         Numerical - true if node is associated with a numeric feature; if so split argument must exist
         Split - determines the value where split is made on numerical features
@@ -12,6 +13,7 @@ class DTNode:
         self.feature_index = feature_index 
         self.children = children if children is not None else {}
         self.parent = parent
+        self.majority = majority
         self.enthropy = enthropy
         self.numerical = numerical
         self.value = value
@@ -37,6 +39,9 @@ class DTNode:
             node.parent = self
         return self
 
+    def set_children(self, child_dict, auto_parent=True):
+        self.children = child_dict
+
     def remove_child(self, value):
         if value in self.children:
             del self.children[value]
@@ -48,6 +53,12 @@ class DTNode:
     def set_parent(self, node):
         self.parent = node
         return self
+    
+    def get_majority(self):
+        return self.majority
+    
+    def set_majority(self, majority):
+        self.majority = majority
 
     def get_entropy(self):
         return self.enthropy
@@ -59,9 +70,14 @@ class DTNode:
     def is_numerical(self):
         return self.numerical
 
-    def set_numerical(self, numerical):
+    def set_numerical(self, numerical, split=None):
+        """Updates both numerical and split, since split depends on numeric"""
         self.numerical = numerical
+        self.split = split
         return self
+
+    def get_split(self):
+        return self.split
 
     def get_value(self):
         return self.value

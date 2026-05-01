@@ -9,12 +9,14 @@ class ID3:
         # Max depth of tree and minimum samples to create another split on a node
         self.max_depth = max_depth
         self.min_samples = min_samples
+        self.root = None
 
+    # TREE TRAINING
     def fit(self, X, y):
         if isinstance(X, pd.DataFrame):
             X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
         if isinstance(y, pd.Series):
-            y = y.values
+            y = np.array(y.values)
 
         assert isinstance(X, np.ndarray) and isinstance(y, np.ndarray), "Either X or y arent np.ndarrays, check yo code"
 
@@ -44,13 +46,10 @@ class ID3:
             if is_numeric(col): 
                 # Below, a very smart way of computing the mean between pairs of points, suggested by AI
                 possible_splits = (unique_vals[1:] + unique_vals[:-1]) / 2
-                print("Possible splits: ", possible_splits)
                 for split in possible_splits:
                     mask = col <= split     # Transforms numeric collumn into something like [True, False, False, ...]
                     # From here, same as categorical
                     ig = calculate_information_gain(mask, y, enth_y)
-                    print("split: ", split)
-                    print("ig:", ig)
                     if ig > best_split_inf_gain:    # Better split found
                         best_split_index = i
                         best_split_inf_gain = ig
@@ -68,13 +67,60 @@ class ID3:
         return best_split_index, num_split
     
 
-    def _build_tree(X:np.ndarray, y:np.ndarray, depth):
+    def _build_tree(self, X:np.ndarray, y:np.ndarray, depth):
         """Builds the decision tree recursively"""
 
         # Return node
         node = DTNode()
+
         # Stopping conditions (returned node is a leaf)
+        if X.size == 0 or (self.max_depth is not None and depth > self.max_depth) or y.size < self.min_samples:
+            node.set_value(get_majority(y))
+            return node
         
+        # If not, continue building tree
+        split_col, numeric_split = self._get_best_split(X, y)
+        node.set_feature(split_col)
+        node.set_majority(get_majority(y))
+        if numeric_split is not None:
+            node.set_numerical(True, numeric_split)
+        for child_val, data_splits in split_dataset(split_col, X, y, numeric_split).items():
+            node.add_child(child_val, self._build_tree(data_splits[0], data_splits[1], depth+1))
+        return node
+    # =======================================================
+
+    # PREDICTING
+    def predict(self, X:np.ndarray):
+        if self.root is None: raise RuntimeError("Maybe try fitting the model first? (you dumb bitch)")
+        if isinstance(X, pd.DataFrame):
+            X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
+
+        assert isinstance(X, np.ndarray), "X isnt np.ndarray, check yo code"
+
+        # Here it is assumed that prediction variable is a string
+        y_pred = np.empty(X.shape[0], dtype=object) # setting the data type as object makes it so the strings lenth is variable
+
+        for entry in range(y_pred.size):
+            y_pred[entry] = self._make_prediction(X[entry], self.root)
+        
+        return y_pred
+            
+
+    def _make_prediction(self, x:np.ndarray, node:DTNode):
+        if node.get_value() is not None: return node.get_value()
+
+        assert x.ndim == 1, "One entry at a time, please"
+
+        val = x[node.get_feature()]
+        if node.is_numerical():
+            if val < node.get_split(): val = "<"
+            else: val = ">="
+        x = np.delete(x, node.get_feature())
+        if val not in node.get_children(): 
+            #raise NotImplementedError("Must figue out a way to deal with missing values, maybe keep max class in the node")
+            return node.get_majority()
+        else:
+            return self._make_prediction(x, node.get_children()[val])
         
 
 

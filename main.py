@@ -11,9 +11,9 @@ def main():
     if (mode==1):
         Game("human", "human").run()
     elif (mode==2):
-        Game("human", "mcts").run()
+        Game("human", "mcts_full").run()
     elif mode==3:
-        Game("mcts", "mcts").run()
+        Game("mcts_full", "mcts_full").run()
 
 
 if __name__=="__main__":

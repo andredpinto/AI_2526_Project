@@ -1,5 +1,3 @@
-#TODO falta saber quem ganha e se é empate
-#TODO indicar tipos dos argumentos e o que as funcoes retornam
 from board import Board
 from players import players
 class Game: #estado do jogo

@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 from metrics import *
+from auxiliar import *
+from node import *
 
 class ID3:
     def __init__(self, max_depth=None, min_samples=10):
@@ -17,6 +19,8 @@ class ID3:
         assert isinstance(X, np.ndarray) and isinstance(y, np.ndarray), "Either X or y arent np.ndarrays, check yo code"
 
         check_valid(X, y)
+
+        self.root = self._build_tree(X, y, 0)
         
 
     def _get_best_split(self, X:np.ndarray, y):
@@ -37,9 +41,7 @@ class ID3:
             # TODO: Fix bug where if numeric and categorical (strings) values are mixed in matrix everything is converted into string
             # Update on this TODO: I dont care; both of our datasets only have one data type, so this wont pose a problem for us
             # Please remember for the future that this algorithm cant handle datasets with mixed data types
-            if np.issubdtype(col.dtype, np.number) and not (col.dtype.kind == "i" and unique_vals.size <= 4): 
-                # checks if datatype of column derives from np.number (as do floats and ints)
-                # if datatype is int and there are four or less unique values, the column is treated as categorical
+            if is_numeric(col): 
                 # Below, a very smart way of computing the mean between pairs of points, suggested by AI
                 possible_splits = (unique_vals[1:] + unique_vals[:-1]) / 2
                 print("Possible splits: ", possible_splits)
@@ -64,6 +66,15 @@ class ID3:
                     num_split = None    # Must reset this if previously dealt with a numeric feature
 
         return best_split_index, num_split
+    
+
+    def _build_tree(X:np.ndarray, y:np.ndarray, depth):
+        """Builds the decision tree recursively"""
+
+        # Return node
+        node = DTNode()
+        # Stopping conditions (returned node is a leaf)
+        
 
 
 if __name__ == "__main__":

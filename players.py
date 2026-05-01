@@ -127,15 +127,33 @@ class MCTS:
         while not board.isFinished(player):
             next_states = board.possible_states(player)
             winning_state = None
+            bad_states = [] #para bloquear uam vitoria do adversario, eu pensei em so remover da lista next_states, mas convem nao modificar uma lista enquanto itero por ela
             for state in next_states:
                 # verifica se este estado resulta numa vitória para o jogador atual
                 if self.heuristic_win:
                     if state.winner(player) == player:
                         winning_state = state
                         break 
+                #verifica se o estado resulta na vitoria do adversario(aquele caso especial de o pop fazer o adversario ganhar)
+                #e se existe algum estado depois deste estado em que o opp pode ganhar
+                if self.heuristic_block_win:
+                    if state.winner(player)==-player:
+                        bad_states.append(state) #caso especial do pop
+                        continue
+                    for opp_state in state.possible_states(-player):
+                        if opp_state.winner(-player) ==-player:
+                            bad_states.append(state)
+                            break#este estado ja nao interessa, por tanto nao vamos explorar o resto dos estados que resultam deste
 
             if winning_state is not None:
                 board = winning_state #escolhe a jogada vencedora
+            elif self.heuristic_block_win:
+                if len(bad_states)==len(next_states):
+                    #igual ao else (todos os estados levam a uma possivel vitoria do adversario, duvido sobre a possibilidade disto acontecer but you never know)
+                    board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
+                else:
+                    good_states = [state for state in next_states if state not in bad_states]
+                    board = random.choice(good_states if len(good_states) > 0 else next_states)
             else:
                 board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
             player *=-1
@@ -201,7 +219,7 @@ class MCTS:
 players = {
     "human" : human_move,
     #how to test all of this? problema para depois
-    "mcts_full" : MCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, no_cycles=True).move,
+    "mcts_full" : MCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, no_cycles=True, max_iter=200).move,#block_win deixa muito lento
     "mcts_simplest":MCTS().move,
     "mcts_heuristic_win":MCTS(heuristic_win=True).move, #selects win state during simulation
     "mcts_heuristic_block_win" : MCTS(heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win

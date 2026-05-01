@@ -122,6 +122,48 @@ class ID3:
         else:
             return self._make_prediction(x, node.get_children()[val])
         
+    def print_tree(self, node=None, depth=0, rule="Root"):
+        # AI GENERATED, I DIDNT CHECK THE CODE
+        """
+        Recursively prints the decision tree in the console.
+        Call this without arguments after fitting: my_model.print_tree()
+        """
+        # Initialize at the root if no node is passed
+        if node is None:
+            node = self.root
+            if node is None:
+                print("The tree is empty. Please fit the model first.")
+                return
+
+        # Formatting: creating indentation based on the depth of the tree
+        indent = "    " * depth
+
+        # BASE CASE: It's a leaf node
+        if node.get_value() is not None:
+            print(f"{indent}└─ {rule}  --->  Predict: {node.get_value()}")
+            return
+
+        # RECURSIVE STEP: It's a decision node
+        feature = node.get_feature()
+        print(f"{indent}└─ {rule}  --->  [Split: Feature {feature}]")
+
+        # Iterate through the children and print them
+        for key, child in node.get_children().items():
+            
+            # Format the rule depending on if it was a numeric or categorical split
+            if getattr(node, 'is_numerical', False) and node.is_numerical():
+                # For numeric splits, the key is typically a boolean (True for <= split, False for > split)
+                split_val = node.get_split()
+                if key == "<":
+                    child_rule = f"If Feature {feature} < {split_val:.2f}"
+                else:
+                    child_rule = f"If Feature {feature} >= {split_val:.2f}"
+            else:
+                # For categorical splits, the key is the exact feature value
+                child_rule = f"If Feature {feature} == '{key}'"
+            
+            # Recurse down to the child
+            self.print_tree(child, depth + 1, child_rule)
 
 
 if __name__ == "__main__":

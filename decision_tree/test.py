@@ -18,8 +18,11 @@ model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
 
+print("TEST FOR NUMERICAL DATASET (iris.csv)")
+
 print("Accuracy (no catastrophic errors, it seems):", accuracy_score(y_test, y_pred))
 model.print_tree()
+print("=====================================================================")
 # print(y_pred)
 # print(pd.Series(y_pred))
 # print(pd.concat([X_test, y_test], axis=1))
@@ -41,11 +44,12 @@ X_cat = categorical_df.drop("Play", axis=1)
 y_cat = categorical_df["Play"]
 X_cat_train, X_cat_test, y_cat_train, y_cat_test = train_test_split(X_cat, y_cat, random_state=seed)
 
-model_cat = ID3(min_samples=1)
+model_cat = ID3(min_samples=5)
 
 model_cat.fit(X_cat_train, y_cat_train)
 
 y_cat_pred = model_cat.predict(X_cat_test)
 
+print("TEST FOR CATEGORICAL DATASET (small, AI generated)")
 print("Categorical dataset accuracy:", accuracy_score(y_cat_test, y_cat_pred))
 model_cat.print_tree()

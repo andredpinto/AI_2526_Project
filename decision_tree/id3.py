@@ -14,6 +14,7 @@ class ID3:
     # TREE TRAINING
     def fit(self, X, y):
         if isinstance(X, pd.DataFrame):
+            self.features = X.columns   # Used to print the tree
             X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
         if isinstance(y, pd.Series):
             y = np.array(y.values)
@@ -121,20 +122,22 @@ class ID3:
             return node.get_majority()
         else:
             return self._make_prediction(x, node.get_children()[val])
-        
-    def print_tree(self, node=None, depth=0, rule="Root"):
-        # AI GENERATED, I DIDNT CHECK THE CODE
+
+    def print_tree(self):
         """
         Recursively prints the decision tree in the console.
         Call this without arguments after fitting: my_model.print_tree()
         """
         # Initialize at the root if no node is passed
-        if node is None:
-            node = self.root
-            if node is None:
-                print("The tree is empty. Please fit the model first.")
-                return
+        if self.root is None:
+            print("The tree is empty. Please fit the model first.")
+            return
+            
+        self._print_tree(self.root, 0, "Root", np.zeros(self.features.size, dtype=np.int8))
 
+        
+    def _print_tree(self, node:DTNode, depth, rule, offsets:np.ndarray):
+        # AI GENERATED, I DIDNT CHECK THE CODE
         # Formatting: creating indentation based on the depth of the tree
         indent = "    " * depth
 
@@ -144,7 +147,9 @@ class ID3:
             return
 
         # RECURSIVE STEP: It's a decision node
-        feature = node.get_feature()
+        feature_index= node.get_feature()
+        feature = self.features[feature_index + offsets[feature_index]]
+        offsets[feature_index:] += 1    # Every feature right of node feature is shifted left (-1)
         print(f"{indent}└─ {rule}  --->  [Split: Feature {feature}]")
 
         # Iterate through the children and print them
@@ -163,7 +168,7 @@ class ID3:
                 child_rule = f"If Feature {feature} == '{key}'"
             
             # Recurse down to the child
-            self.print_tree(child, depth + 1, child_rule)
+            self._print_tree(child, depth + 1, child_rule, offsets.copy())
 
 
 if __name__ == "__main__":

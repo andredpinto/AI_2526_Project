@@ -18,6 +18,7 @@ class ID3:
             X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
         if isinstance(y, pd.Series):
             y = np.array(y.values)
+        self.target_type = y.dtype
 
         assert isinstance(X, np.ndarray) and isinstance(y, np.ndarray), "Either X or y arent np.ndarrays, check yo code"
 
@@ -100,7 +101,10 @@ class ID3:
 
         # Here it is assumed that prediction variable is a string
         #TODO: add case for int values, for the game
-        y_pred = np.empty(X.shape[0], dtype=object) # setting the data type as object makes it so the strings lenth is variable
+        if self.target_type.kind == "i":
+            y_pred = np.empty(X.shape[0], dtype=np.int64) # if when using objects to represent ints weird things were happening when trying to measure accuracy
+        else:
+            y_pred = np.empty(X.shape[0], dtype=object) # setting the data type as object makes it so the strings lenth is variable
 
         for entry in range(y_pred.size):
             y_pred[entry] = self._make_prediction(X[entry], self.root)

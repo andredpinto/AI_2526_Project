@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
-from metrics import *
-from auxiliar import *
-from node import *
+from decision_tree.metrics import *
+from decision_tree.auxiliar import *
+from decision_tree.node import *
 
 class ID3:
     def __init__(self, max_depth=None, min_samples=10):
@@ -91,7 +91,7 @@ class ID3:
     # =======================================================
 
     # PREDICTING
-    def predict(self, X:np.ndarray):
+    def predict(self, X):
         if self.root is None: raise RuntimeError("Maybe try fitting the model first? (you dumb bitch)")
         if isinstance(X, pd.DataFrame):
             X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
@@ -99,6 +99,7 @@ class ID3:
         assert isinstance(X, np.ndarray), "X isnt np.ndarray, check yo code"
 
         # Here it is assumed that prediction variable is a string
+        #TODO: add case for int values, for the game
         y_pred = np.empty(X.shape[0], dtype=object) # setting the data type as object makes it so the strings lenth is variable
 
         for entry in range(y_pred.size):

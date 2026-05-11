@@ -1,2 +1,4 @@
 __pycache__
 .vscode
+dataset_mcts.csv
+fitted_tree.joblib

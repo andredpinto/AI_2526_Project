@@ -84,7 +84,7 @@ class Node:
         return best_node
 
 class MCTS:
-    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=2000):
+    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
@@ -233,16 +233,18 @@ class MCTS:
 # the functions need to be declared beforehand
 players = {
     "human" : human_move,
-    #how to test all of this? problema para depois
-    "mcts_full" : MCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, max_iter=200).move,#block_win deixa muito lento
-    "mcts_simplest":MCTS().move,
-    "mcts_heuristic_win":MCTS(heuristic_win=True).move, #selects win state during simulation
-    "mcts_heuristic_block_win" : MCTS(heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
-    "mcts_tree":MCTS(save_tree=True).move, #one of the above, but saving the tree
-    #how many children we can select/add to the tree:
-    #only test between them i think
-    "mcts_select_2_children" : MCTS(child_limit=2).move,
-    "mcts_select_4_children" : MCTS(child_limit=4).move,
-    "mcts_select_8_children" : MCTS(child_limit=8).move,
-    "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
+
+    "mcts_simplest":MCTS(child_limit=8).move,
+    # "mcts_heuristic_win":MCTS(child_limit=8,heuristic_win=True).move, #selects win state during simulation
+    # "mcts_heuristic_block_win" : MCTS(child_limit=8,heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
+    # "mcts_win_and_block_win" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True).move,
+    # "mcts_tree":MCTS(child_limit=8,save_tree=True).move, #one of the above, but saving the tree
+    "mcts_full" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True, save_tree=True).move,#block_win deixa muito lento
+
+    # "mcts_select_2_children" : MCTS(child_limit=2).move,
+    # "mcts_select_4_children" : MCTS(child_limit=4).move,
+    # "mcts_select_8_children" : MCTS(child_limit=8).move,
+    # "mcts_select_8_children_more_iters" : MCTS(child_limit=8, max_iter=500).move,
+    # "mcts_select_all_children_more_iters" : MCTS(max_iter=500).move,
+    # "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
 }

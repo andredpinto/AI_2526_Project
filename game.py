@@ -1,6 +1,7 @@
 from board import Board
 from players import players
 from time import perf_counter #for the analysis
+from players import MCTS
 
 class Game: #estado do jogo
     def __init__(self, player1, player2, rows=6, cols=7):
@@ -61,7 +62,16 @@ class Game: #estado do jogo
                     print("Draw!!!") #from now on, i promise to only write in english
                     return
 
-    def notebook_run(self) -> dict: #retorna estatisticas
+    def notebook_run(self, player1_name, player1_move, player2_name, player2_move) -> dict: #retorna estatisticas
+        """
+        ignores the arguments in Game\n
+        use Game("", "")"""
+        assert isinstance(getattr(player1_move, "__self__", None), MCTS)
+        assert getattr(player1_move, "__func__", None) is MCTS.move
+
+        assert isinstance(getattr(player2_move, "__self__", None), MCTS)
+        assert getattr(player2_move, "__func__", None) is MCTS.move
+
         key = self.b.hash_state(self.cur_symbol)
         self.state_counts[key] = 1
         
@@ -71,8 +81,9 @@ class Game: #estado do jogo
         time_player2 = 0
 
         while (True):
+            move = player1_move if self.cur_symbol == 1 else player2_move
             start = perf_counter()
-            players[self.cur_player](self.b, self.cur_symbol)
+            move(self.b, self.cur_symbol)
             end = perf_counter()
 
             time = end-start
@@ -87,10 +98,10 @@ class Game: #estado do jogo
             if self.b.isFinished(self.cur_symbol):
                 winner = self.b.winner(self.cur_symbol)
                 return {
-                    "player1": self.player1,
-                    "player2": self.player2,
+                    "player1": player1_name,
+                    "player2": player2_name,
                     "winner": winner,
-                    "winner_name": self.player1 if winner == 1 else self.player2 if winner == -1 else "draw",
+                    "winner_name": player1_name if winner == 1 else player2_name if winner == -1 else "draw",
 
                     "time_player1": time_player1,
                     "time_player2": time_player2,
@@ -106,8 +117,8 @@ class Game: #estado do jogo
 
             if self.b.is_full():
                 return{
-                    "player1": self.player1,
-                    "player2": self.player2,
+                    "player1": player1_name,
+                    "player2": player2_name,
                     "winner": 0,
                     "winner_name": "draw",
 
@@ -119,8 +130,8 @@ class Game: #estado do jogo
 
             elif self.state_counts[key]==3:
                 return{
-                    "player1": self.player1,
-                    "player2": self.player2,
+                    "player1": player1_name,
+                    "player2": player2_name,
                     "winner": 0,
                     "winner_name": "draw",
 

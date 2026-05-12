@@ -73,9 +73,9 @@ def generate_random_states(num_states, max_iter=1000):
 
 if __name__ == "__main__":
     # X jogos do inicio ao fim
-    generate_full_games(num_games=3) 
+    #generate_full_games(num_games=3) 
     
     # X situacoes estranhas a meio do jogo para o MCTS aprender
-    generate_random_states(num_states=3)
+    generate_random_states(num_states=5000)
     
     print("Processo finalizado")

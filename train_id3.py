@@ -16,6 +16,8 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random
 
 tree.fit(X_train, y_train)
 
+joblib.dump(tree, "fitted_tree.joblib")
+
 y_pred = tree.predict(X_test)
 
 # These tests were AI generated
@@ -31,6 +33,6 @@ y_pred = tree.predict(X_test)
 # print("y_test shape:", np.shape(y_test))
 # print("y_pred shape:", np.shape(y_pred))
 
-# print("Accuracy: ", accuracy_score(y_test, y_pred))
+print("Accuracy: ", accuracy_score(y_test, y_pred))
 
 joblib.dump(tree, "fitted_tree.joblib")

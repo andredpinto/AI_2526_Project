@@ -1,6 +1,6 @@
 import random
-from board import Board
-from players import MCTS
+from game.board import Board
+from game.players import MCTS
 
 def generate_full_games(num_games, max_iter=1000):
     print("A gerar jogos MCTS vs MCTS")

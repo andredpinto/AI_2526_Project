@@ -3,6 +3,7 @@ import numpy as np
 from decision_tree.metrics import *
 from decision_tree.auxiliar import *
 from decision_tree.node import *
+import random
 
 class ID3:
     def __init__(self, max_depth=None, min_samples=10):
@@ -110,7 +111,51 @@ class ID3:
             y_pred[entry] = self._make_prediction(X[entry], self.root)
         
         return y_pred
-            
+
+    #this will do the prediction, going to a leaf node
+    #the nodes only save the majority class, so what i'm thinking
+    #is if the majority class is in the valid_moves then ok
+    #if not go to their parents
+    #and if no parent has a valid_move as the majority
+    #just return a random valid move
+    #this assumes X is just one board
+    def predict_valid(self, X, valid_moves:list, verbose=False):
+        """if verbose=True -> prints something saying it choose a random valid move"""
+        if self.root is None: raise RuntimeError("Maybe try fitting the model first? (you dumb bitch)")
+        if isinstance(X, pd.DataFrame):
+            X = X.values    # .values returns a numpy representation of the dataframe, probably withouth the feature names
+        assert isinstance(X, np.ndarray), "X isnt np.ndarray, check yo code"
+
+        node = self._get_leaf(X, self.root)
+
+        #while we dont run out of nodes
+        while node is not None:
+            if node.get_value() is not None:
+                pred = node.get_value()
+            else:
+                pred = node.get_majority()
+            if pred in valid_moves:
+                return pred
+            node = node.get_parent()
+
+        if verbose:
+            print("random choice has to be made")
+        return random.choice(valid_moves)
+
+    #copy paste of _make_prediction without the numerical bs
+    #assumes categorical data, like the pieces in our board
+    def _get_leaf(self, x:np.ndarray, node:DTNode):
+        if node.get_value() is not None: return node
+
+        assert x.ndim == 1, "One entry at a time, please"
+
+        val = x[node.get_feature()]
+        x = np.delete(x, node.get_feature())
+        if val not in node.get_children(): 
+            #raise NotImplementedError("Must figue out a way to deal with missing values, maybe keep max class in the node")
+            return node
+        else:
+            return self._get_leaf(x, node.get_children()[val])
 
     def _make_prediction(self, x:np.ndarray, node:DTNode):
         if node.get_value() is not None: return node.get_value()

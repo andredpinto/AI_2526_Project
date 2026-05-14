@@ -238,6 +238,23 @@ from joblib import load
 import numpy as np
 tree_path = pathlib.PurePath("trees", "tree50_20.joblib")
 test_tree = load(tree_path)
+
+def oh_fuck(board:Board, player, flat_board):
+    #fiz esta versao aqui direta para ser mais direto de usar
+    #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board
+    valid_moves = []
+    for col in range(board.cols):
+        if board.is_valid_move("drop", col, player):
+            valid_moves.append(move_dict[f"drop_{col + 1}"])
+        if board.is_valid_move("pop", col, player):
+            valid_moves.append(move_dict[f"pop_{col + 1}"])
+
+    tree_out = rev_move_dict[test_tree.predict_valid(flat_board, valid_moves, verbose=True)]
+    move = tree_out.split("_")
+    type = move[0]
+    col = int(move[1])-1
+    return type, col
+
 def tree_move(board:Board, player):
     flat_board = np.ndarray(shape = 6*7, dtype=int)
     point = 0
@@ -256,7 +273,9 @@ def tree_move(board:Board, player):
         board.apply_move(type, col, player)
         return
     else:
-        print("Invalid move, try again")
+        type, col = oh_fuck(board, player, flat_board)
+        board.apply_move(type, col, player)
+        return
 
 
 # the functions need to be declared beforehand

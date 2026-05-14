@@ -1,4 +1,4 @@
-from game import Game
+from game.game import Game
 
 #cada player é identificado por uma string
 # essa string esta num dicionario em player.py e faz corresponder a uma funcao para fazer a jogada

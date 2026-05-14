@@ -1,7 +1,7 @@
-from board import Board
-from players import players
+from game.board import Board
+from game.players import players
 from time import perf_counter #for the analysis
-from players import MCTS
+from game.players import MCTS
 
 class Game: #estado do jogo
     def __init__(self, player1, player2, rows=6, cols=7):

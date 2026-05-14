@@ -1,6 +1,5 @@
 __pycache__
 .codex
 .vscode
-dataset_mcts.csv
 fitted_tree.joblib
 tree*_1.joblib

@@ -140,7 +140,7 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
         poss_moves= []
         for col in range(self.cols):
             if self.heights[col]<self.rows: #verifica se é possível colocar mais uma peça na posição
-                poss_moves.append(("drop"), col)
+                poss_moves.append(("drop", col))
             
             if self.b[col][0]== curr_player:  # verifica se posso retirar
                 poss_moves.append(("pop", col))

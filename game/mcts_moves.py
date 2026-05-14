@@ -1,28 +1,12 @@
+#for now its just a copy paste of what was in players
+#i decided to keep everything the same and i will just expand our options in new files
+
 import math
-from board import Board
-from data_storage import save_to_dataset
+from game.board import Board
+from game.data_storage import save_to_dataset
 import random # nao vou fazer from random import choice, para ser mais claro quando eu usar esse metodo
-# metese aqui um dicionario ao que corresponde cada nome que se escolhe para jogar no main
-# e dps as funcoes correspondentes
-
-def human_move(board, player):
-    while (True):
-        move= input("drop/pop + collumn: ").lower().strip().split() #not case sensitive
-        #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
-        #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
-        if (len(move)!=2):
-            print("Invalid move, try again")
-            continue
-        type = move[0]
-        col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
-        if (board.is_valid_move(type, col, player)):
-            board.apply_move(type, col, player)
-            return
-        else:
-            print("Invalid move, try again")
-
-#Class node for the monte carlo tree search
-class Node:
+#Class node for the monte carlo tree search that uses a list of moves instead of a list of states
+class MoveNode:
     def __init__(self, state:Board, player, parent=None, child_limit=None):
         self.state = state
         self.parent = parent
@@ -83,7 +67,7 @@ class Node:
                 best_node = child
         return best_node
 
-class MCTS:
+class MoveMCTS:
     def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
@@ -227,73 +211,3 @@ class MCTS:
         if self.save_to_dataset:
             save_to_dataset(board, player, move)
         return move
-
-
-from data_storage import move_dict
-from decision_tree import id3
-rev_move_dict = {v:k for k,v in move_dict.items()}
-# Loading pre trained trees
-import pathlib
-from joblib import load
-import numpy as np
-tree_path = pathlib.PurePath("trees", "tree50_20.joblib")
-test_tree = load(tree_path)
-
-def oh_fuck(board:Board, player, flat_board):
-    #fiz esta versao aqui direta para ser mais direto de usar
-    #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board
-    valid_moves = []
-    for col in range(board.cols):
-        if board.is_valid_move("drop", col, player):
-            valid_moves.append(move_dict[f"drop_{col + 1}"])
-        if board.is_valid_move("pop", col, player):
-            valid_moves.append(move_dict[f"pop_{col + 1}"])
-
-    tree_out = rev_move_dict[test_tree.predict_valid(flat_board, valid_moves, verbose=True)]
-    move = tree_out.split("_")
-    type = move[0]
-    col = int(move[1])-1
-    return type, col
-
-def tree_move(board:Board, player):
-    flat_board = np.ndarray(shape = 6*7, dtype=int)
-    point = 0
-    for col in board.b:
-        for piece in col:
-            # multiplica pelo player para que o 1 represente sempre a peca de quem joga
-            flat_board[point] = piece * player
-            point+=1
-    tree_out = rev_move_dict[test_tree._make_prediction(flat_board, test_tree.root)]
-    move = tree_out.split("_")
-    #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
-    #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
-    type = move[0]
-    col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
-    if (board.is_valid_move(type, col, player)):
-        board.apply_move(type, col, player)
-        return
-    else:
-        type, col = oh_fuck(board, player, flat_board)
-        board.apply_move(type, col, player)
-        return
-
-
-# the functions need to be declared beforehand
-players = {
-    "human" : human_move,
-
-    "mcts_simplest":MCTS(child_limit=8).move,
-    # "mcts_heuristic_win":MCTS(child_limit=8,heuristic_win=True).move, #selects win state during simulation
-    # "mcts_heuristic_block_win" : MCTS(child_limit=8,heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
-    # "mcts_win_and_block_win" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True).move,
-    # "mcts_tree":MCTS(child_limit=8,save_tree=True).move, #one of the above, but saving the tree
-    "mcts_full" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True, save_tree=True).move,#block_win deixa muito lento
-
-    # "mcts_select_2_children" : MCTS(child_limit=2).move,
-    # "mcts_select_4_children" : MCTS(child_limit=4).move,
-    # "mcts_select_8_children" : MCTS(child_limit=8).move,
-    # "mcts_select_8_children_more_iters" : MCTS(child_limit=8, max_iter=500).move,
-    # "mcts_select_all_children_more_iters" : MCTS(max_iter=500).move,
-    # "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
-    "id3 in the nights" : tree_move,
-}

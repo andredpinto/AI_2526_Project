@@ -7,6 +7,7 @@ def main():
     print("1 - Human vs Human")
     print("2 - Human vs MCTS")
     print("3 - MCTS vs MCTS")
+    print("4 - Human vs Tree in the nights")
     mode = int(input().strip())
     if (mode==1):
         Game("human", "human").run()
@@ -14,6 +15,8 @@ def main():
         Game("human", "mcts_full").run()
     elif mode==3:
         Game("mcts_full", "mcts_full").run()
+    elif mode==4:
+        Game("human", "id3 in the nights").run()
 
 
 if __name__=="__main__":

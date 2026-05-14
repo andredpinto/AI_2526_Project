@@ -202,7 +202,7 @@ class MCTS:
             # esoclher uma folha na arvore, para isso tenho de ir percorrendo a arvore ate chegar a um no com filhos nao expandidos
             while not node.has_unexpanded_children_states(): #but this way i can still select a temrinal node(no children and no children to expand also)
                 if (len(node.children)==0): #special case for terminal nodes
-                    break;
+                    break
                 node = node.best_uct_child()
             #expansao:
             if node.has_unexpanded_children_states(): # só se nao for terminal
@@ -229,6 +229,35 @@ class MCTS:
         return move
 
 
+from data_storage import move_dict
+from decision_tree import id3
+rev_move_dict = {v:k for k,v in move_dict.items()}
+# Loading pre trained trees
+import pathlib
+from joblib import load
+import numpy as np
+tree_path = pathlib.PurePath("trees", "tree50_20.joblib")
+test_tree = load(tree_path)
+def tree_move(board:Board, player):
+    flat_board = np.ndarray(shape = 6*7, dtype=int)
+    point = 0
+    for col in board.b:
+        for piece in col:
+            # multiplica pelo player para que o 1 represente sempre a peca de quem joga
+            flat_board[point] = piece * player
+            point+=1
+    tree_out = rev_move_dict[test_tree._make_prediction(flat_board, test_tree.root)]
+    move = tree_out.split("_")
+    #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
+    #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
+    type = move[0]
+    col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
+    if (board.is_valid_move(type, col, player)):
+        board.apply_move(type, col, player)
+        return
+    else:
+        print("Invalid move, try again")
+
 
 # the functions need to be declared beforehand
 players = {
@@ -247,4 +276,5 @@ players = {
     # "mcts_select_8_children_more_iters" : MCTS(child_limit=8, max_iter=500).move,
     # "mcts_select_all_children_more_iters" : MCTS(max_iter=500).move,
     # "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
+    "id3 in the nights" : tree_move,
 }

@@ -2,7 +2,7 @@
 class Board: #tabuleiro de connect4 com var. de dar pop out
     #possiveis otimizacoes:
         # usar numpy arrays?
-    def __init__(self, rows=6, cols=7, board=None):
+    def __init__(self, rows=6, cols=7, board=None): #wtf is this board=None this doesnt make any sense i have no idea why i did this ??? im not oging to delete in case im using it somewhere i think im going to use it actually hahah attention to update the other attributes
         self.rows = rows
         self.cols = cols
         self.heights = [0] * cols
@@ -134,6 +134,30 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
                 poss_states.append(new_board)
 
         return poss_states
+    
+    def possible_moves(self, curr_player:int)->list:
+        """returns a list with tuples like ("drop", 1)"""
+        poss_moves= []
+        for col in range(self.cols):
+            if self.heights[col]<self.rows: #verifica se é possível colocar mais uma peça na posição
+                poss_moves.append(("drop"), col)
+            
+            if self.b[col][0]== curr_player:  # verifica se posso retirar
+                poss_moves.append(("pop", col))
+
+        return poss_moves
+    
+    def copy(self):
+        new_board = []
+        for col in self.b:
+            new_board.append(col.copy())
+
+        b_copy = Board(board=new_board)
+        b_copy.heights = self.heights.copy()
+        b_copy.last_move = self.last_move
+        b_copy.last_player =self.last_player
+
+        return b_copy
 
     #assumes that type is lowercase
     def is_valid_move(self, type, col, player):

@@ -2,10 +2,15 @@ import math
 from game.board import Board
 from game.data_storage import save_to_dataset
 import random 
+from game.utils import *
+"""
+This mcts will have expansion policies, in other words the possible moves that a node can expand will be 
+determined by the function we define
+"""
 
 #Class node for the monte carlo tree search that uses a list of moves instead of a list of states
 class MoveNode:
-    def __init__(self, state:Board, player, parent=None, child_limit=None, causal_move=None):
+    def __init__(self, state:Board, player, parent=None, child_limit=None, causal_move=None, expansion_policy=get_all_moves):
         self.state = state
         self.parent = parent
         self.children = []
@@ -15,13 +20,14 @@ class MoveNode:
         self.unexpanded_children_moves = None
         self.child_limit = child_limit
         self.causal_move = causal_move #the move that brought this node to life (to remove the infer_move_by_diff function i created)
+        self.expansion_policy = expansion_policy
 
     def has_unexpanded_children_moves(self):
         if self.state.isFinished(self.player):
             self.unexpanded_children_moves = []
 
         elif self.unexpanded_children_moves==None: # ainda so foi escolhido, nao explorado
-            moves = self.state.possible_moves(self.player)
+            moves = self.expansion_policy(self.state, self.player)
             random.shuffle(moves)
 
             if self.child_limit: #não é None
@@ -42,7 +48,8 @@ class MoveNode:
         children_move = self.unexpanded_children_moves.pop()
         children_state = self.state.copy()
         children_state.apply_move(children_move[0], children_move[1], self.player)
-        children_node = MoveNode(children_state, self.player*-1, parent=self,child_limit=self.child_limit, causal_move=children_move)
+        children_node = MoveNode(children_state, self.player*-1, parent=self,child_limit=self.child_limit,
+        expansion_policy=self.expansion_policy, causal_move=children_move)
         self.children.append(children_node)
         return children_node
 
@@ -70,12 +77,14 @@ class MoveNode:
 
 #the block_win (it's not really an heuristic) needs to use the list of possible states
 class MoveMCTS:
-    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300):
+    def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300,
+    expansion_policy=get_all_moves):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
            save_tree - wheter the mcts keeps the tree or not\n
-           max_iter - iters for the mcts
+           max_iter - iters for the mcts\n
+           expansion_policy - function that defines what moves will be expanded (has to return a list with the moves has tuples) utils.py
         """
         self.save_to_dataset = save_to_dataset
         self.heuristic_win = heuristic_win
@@ -84,11 +93,12 @@ class MoveMCTS:
         self.save_tree = save_tree
         self.max_iter=max_iter
         self.root = None
+        self.expansion_policy=expansion_policy
 
     def sync_tree(self, board, player):
         #se for a primeira jogada do jogo, criamos a raiz do zero ou se save_tree=False
         if self.root is None or not self.save_tree:
-            self.root = MoveNode(board, player, child_limit=self.child_limit)
+            self.root = MoveNode(board, player, child_limit=self.child_limit, expansion_policy=self.expansion_policy)
             return
 
         # precisamos de encontrar qual dos filhos da arvore anterior 
@@ -102,7 +112,7 @@ class MoveMCTS:
                 return#fuck readibility for some lines of code deleted hahaha
 
         #se o humano fez uma jogada que nao tinhamos explorado
-        self.root = MoveNode(board, player, child_limit=self.child_limit)
+        self.root = MoveNode(board, player, child_limit=self.child_limit, expansion_policy=self.expansion_policy)
 
     def simulate(self, board, player):
         start_player = -player # o player é o jogador que vai jogar agora, ams nos queremos avaliar para o que levou ao estado atual

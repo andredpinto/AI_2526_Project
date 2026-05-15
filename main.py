@@ -19,6 +19,8 @@ def main():
         Game("human", "id3 in the nights").run()
     elif mode==5:
         Game("human","mcts_new").run()
+    elif mode==6:
+        Game(player1="mcts_new_exp1", player2="mcts_new_exp2").run()
 
 
 if __name__=="__main__":

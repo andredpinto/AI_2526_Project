@@ -1,7 +1,0 @@
-organizacao:
-main.py é o que se corre para jogar o jogo, permite escolher o modo.
-
-o modo é escolhido com base em strings que sao as chaves num dicionario mapeadas para funcoes que fazem as jogadas. Isto vai estar no ficheiro players.py
-
-O estado do jogo em si vai estar em game.py e suponho que podemos meter aqui um metodo que comunica com tudo e que corre o jogo
-e depois o tabuleiro com as x funcoes que precisamos em board.py

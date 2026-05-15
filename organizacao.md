@@ -24,3 +24,4 @@ eu sei que está a ficar um pouco confuso o qeu se tá a passar com os mcts:
 
 **o que ainda pode confundir e não me apetece mexer:**
 - o que se usa durante a simulação não é bem uma heuristica como as que tou a criar agora...
+- mcts original em players.py e o novo mcts melhor está em mcts_moves.py

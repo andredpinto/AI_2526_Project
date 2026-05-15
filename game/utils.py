@@ -59,9 +59,12 @@ def get_win_block_or_all(board: Board, player):
 #a escala/ os valores que as heuristicas é algo que terei que definir depois
 #i'm thinking about modularity in the heuristics and then aggregating them...
 def heuristic_win(board:Board, player):
-    ...
+    winner = board.winner(player)
+    if (winner != None):
+        return winner #0 -1 or 1, 0 for draw
 
 def heuristic_threat(board:Board, player):
     """if there exists a threat (3x in a "row") it returns a higher aboslute value\n
     for example if player -1 has a 3 in a row it will return -100 while if it was player 1 it would be 100 """
     ...
+...

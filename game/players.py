@@ -241,6 +241,7 @@ import numpy as np
 tree_path = pathlib.PurePath("decision_tree", "pre_trained_trees", "tree50_20.joblib")
 test_tree = load(tree_path)
 
+#util for tree_move
 def oh_fuck(board:Board, player, flat_board):
     #fiz esta versao aqui direta para ser mais direto de usar
     #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board

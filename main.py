@@ -17,6 +17,8 @@ def main():
         Game("mcts_full", "mcts_full").run()
     elif mode==4:
         Game("human", "id3 in the nights").run()
+    elif mode==5:
+        Game("human","mcts_new").run()
 
 
 if __name__=="__main__":

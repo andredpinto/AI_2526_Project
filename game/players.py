@@ -2,6 +2,7 @@ import math
 from game.board import Board
 from game.data_storage import save_to_dataset
 import random # nao vou fazer from random import choice, para ser mais claro quando eu usar esse metodo
+from game.mcts_moves import MoveMCTS
 # metese aqui um dicionario ao que corresponde cada nome que se escolhe para jogar no main
 # e dps as funcoes correspondentes
 
@@ -296,4 +297,5 @@ players = {
     # "mcts_select_all_children_more_iters" : MCTS(max_iter=500).move,
     # "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
     "id3 in the nights" : tree_move,
+    "mcts_new" : MoveMCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, max_iter=100).move,
 }

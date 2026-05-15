@@ -1,36 +1,35 @@
-#for now its just a copy paste of what was in players
-#i decided to keep everything the same and i will just expand our options in new files
-
 import math
 from game.board import Board
 from game.data_storage import save_to_dataset
-import random # nao vou fazer from random import choice, para ser mais claro quando eu usar esse metodo
+import random 
+
 #Class node for the monte carlo tree search that uses a list of moves instead of a list of states
 class MoveNode:
-    def __init__(self, state:Board, player, parent=None, child_limit=None):
+    def __init__(self, state:Board, player, parent=None, child_limit=None, causal_move=None):
         self.state = state
         self.parent = parent
         self.children = []
         self.wins = 0
         self.visits = 0
         self.player = player #player que vai jogar a seguir
-        self.unexpanded_children_states = None
+        self.unexpanded_children_moves = None
         self.child_limit = child_limit
+        self.causal_move = causal_move #the move that brought this node to life (to remove the infer_move_by_diff function i created)
 
-    def has_unexpanded_children_states(self):
+    def has_unexpanded_children_moves(self):
         if self.state.isFinished(self.player):
-            self.unexpanded_children_states = []
+            self.unexpanded_children_moves = []
 
-        elif self.unexpanded_children_states==None: # ainda so foi escolhido, nao explorado
-            states= self.state.possible_states(self.player)
-            random.shuffle(states)
+        elif self.unexpanded_children_moves==None: # ainda so foi escolhido, nao explorado
+            moves = self.state.possible_moves(self.player)
+            random.shuffle(moves)
 
             if self.child_limit: #não é None
-                states = states[:self.child_limit] #in python there's no problem with child_limit being bigger than the length of the list
+                moves = moves[:self.child_limit] #in python there's no problem with child_limit being bigger than the length of the list
 
-            self.unexpanded_children_states = states
+            self.unexpanded_children_moves = moves
 
-        return len(self.unexpanded_children_states) > 0
+        return len(self.unexpanded_children_moves) > 0
 
     def uct(self, c=math.sqrt(2)):
         w = self.wins
@@ -38,10 +37,12 @@ class MoveNode:
         N = self.parent.visits
         return w/n + c*math.sqrt(math.log(N) / n) 
 
-    #assume que unexpanded_children_states != None e de []
+    #assume que unexpanded_children_moves != None e de []
     def expand(self):
-        children_state = self.unexpanded_children_states.pop()
-        children_node = Node(children_state, self.player*-1, parent=self,child_limit=self.child_limit)
+        children_move = self.unexpanded_children_moves.pop()
+        children_state = self.state.copy()
+        children_state.apply_move(children_move[0], children_move[1], self.player)
+        children_node = MoveNode(children_state, self.player*-1, parent=self,child_limit=self.child_limit, causal_move=children_move)
         self.children.append(children_node)
         return children_node
 
@@ -67,6 +68,7 @@ class MoveNode:
                 best_node = child
         return best_node
 
+#the block_win (it's not really an heuristic) needs to use the list of possible states
 class MoveMCTS:
     def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300):
         """save_to_dataset - whether we save the move for the dataset or not\n
@@ -83,21 +85,10 @@ class MoveMCTS:
         self.max_iter=max_iter
         self.root = None
 
-    #assumes board1 is one move ahead from board0
-    @staticmethod #doesnt need the self argument, i will not put it outside the class, because its only used for the mcts
-    def infer_move_by_diff(board0, board1):
-        for col in range(board0.cols):
-            h0 = board0.heights[col]
-            h1 = board1.heights[col]
-            if h1 == h0 + 1:
-                return ("drop", col)
-            if h1 == h0 - 1:
-                return ("pop", col)
-
     def sync_tree(self, board, player):
         #se for a primeira jogada do jogo, criamos a raiz do zero ou se save_tree=False
         if self.root is None or not self.save_tree:
-            self.root = Node(board, player, child_limit=self.child_limit)
+            self.root = MoveNode(board, player, child_limit=self.child_limit)
             return
 
         # precisamos de encontrar qual dos filhos da arvore anterior 
@@ -111,57 +102,66 @@ class MoveMCTS:
                 return#fuck readibility for some lines of code deleted hahaha
 
         #se o humano fez uma jogada que nao tinhamos explorado
-        self.root = Node(board, player, child_limit=self.child_limit)
+        self.root = MoveNode(board, player, child_limit=self.child_limit)
 
     def simulate(self, board, player):
         start_player = -player # o player é o jogador que vai jogar agora, ams nos queremos avaliar para o que levou ao estado atual
         #estado inicial -> tabulerio vazio->queremos esoclher a melhor jogada para o X, mas é o O a jogar
+        sim_board = board.copy()
 
-        while not board.isFinished(player):
-            next_states = board.possible_states(player)
-            winning_state = None
-            bad_states = [] #para bloquear uam vitoria do adversario, eu pensei em so remover da lista next_states, mas convem nao modificar uma lista enquanto itero por ela
+        while not sim_board.isFinished(player):
 
-            for state in next_states:
-                # verifica se este estado resulta numa vitória para o jogador atual
-                if self.heuristic_win:
-                    if state.winner(player) == player:
-                        winning_state = state
-                        break 
+            next_moves = sim_board.possible_moves(player)
+            if not next_moves: return 0
 
-                #verifica se o estado resulta na vitoria do adversario(aquele caso especial de o pop fazer o adversario ganhar)
-                #e se existe algum estado depois deste estado em que o opp pode ganhar
-                if self.heuristic_block_win:
-                    if state.winner(player)==-player:
-                        bad_states.append(state) #caso especial do pop
+            chosen_move = None
+
+            if self.heuristic_win:
+                for move in next_moves:
+                    new_board = sim_board.copy()
+                    new_board.apply_move(move[0], move[1], player) 
+
+                    if new_board.winner(player)==player:
+                        chosen_move = move
+                        break
+            
+            if chosen_move is None and self.heuristic_block_win:
+                good_moves = []
+
+                for move in next_moves:
+                    test_board = sim_board.copy()
+                    test_board.apply_move(move[0], move[1], player)
+
+                    if test_board.winner(player) == -player:
                         continue
-                    for opp_state in state.possible_states(-player):
-                        if opp_state.winner(-player) ==-player:
-                            bad_states.append(state)
-                            break#este estado ja nao interessa, por tanto nao vamos explorar o resto dos estados que resultam deste
 
-            if winning_state is not None:#é garantido só correr se heuristic_win=True, porque só assim é que entra dentro do if que pode mudar o None
-                board = winning_state #escolhe a jogada vencedora
+                    opponent_can_win = False
+                    for opp_move in test_board.possible_moves(-player):
+                        opp_board = test_board.copy()
+                        opp_board.apply_move(opp_move[0], opp_move[1], -player)
+                        if opp_board.winner(-player) == -player:
+                            opponent_can_win = True
+                            break
 
-            elif self.heuristic_block_win:
-                if len(bad_states)==len(next_states):
-                    #igual ao else (todos os estados levam a uma possivel vitoria do adversario, duvido sobre a possibilidade disto acontecer but you never know)
-                    board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
-                else:
-                    good_states = [state for state in next_states if state not in bad_states]
-                    board = random.choice(good_states if len(good_states) > 0 else next_states)
+                    if not opponent_can_win:
+                        good_moves.append(move)
 
-            else:
-                board = random.choice(next_states) #como não ganha, escolhe uma jogada aleatória
+                if good_moves:
+                    chosen_move = random.choice(good_moves)
 
-            player *=-1
+            if chosen_move is None:
+                chosen_move = random.choice(next_moves)
 
-        winner = board.winner(player)
+            sim_board.apply_move(chosen_move[0], chosen_move[1], player)
+            player *= -1
+#=======end while===============================================
+        winner = sim_board.winner(player)
         if winner == 0:
             return 0
         if winner==start_player:
             return 1
         return -1 #bad for the player
+#end fsimulate============================================================
 
     def backpropagate(self, node, res):
         while node:
@@ -184,12 +184,12 @@ class MoveMCTS:
 
             #selecao:
             # esoclher uma folha na arvore, para isso tenho de ir percorrendo a arvore ate chegar a um no com filhos nao expandidos
-            while not node.has_unexpanded_children_states(): #but this way i can still select a temrinal node(no children and no children to expand also)
+            while not node.has_unexpanded_children_moves(): #but this way i can still select a temrinal node(no children and no children to expand also)
                 if (len(node.children)==0): #special case for terminal nodes
                     break
                 node = node.best_uct_child()
             #expansao:
-            if node.has_unexpanded_children_states(): # só se nao for terminal
+            if node.has_unexpanded_children_moves(): # só se nao for terminal
                 node = node.expand() #vai se expandir um dos filhos entao
             #simulacao:
             res = self.simulate(node.state, node.player)
@@ -199,8 +199,7 @@ class MoveMCTS:
         #escolha da melhor jogada
         best_child = self.root.best_n_child()
 
-        #descobrimos qual foi o movimento feito para chegar a esse estado
-        move = MCTS.infer_move_by_diff(self.root.state, best_child.state)
+        move = best_child.causal_move
 
         #a raiz para a proxima jogada passa a ser este no
         if self.save_tree:

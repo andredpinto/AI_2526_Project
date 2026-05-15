@@ -1,7 +1,6 @@
 from game.board import Board
 from game.players import players
 from time import perf_counter #for the analysis
-from game.players import MCTS
 
 class Game: #estado do jogo
     def __init__(self, player1, player2, rows=6, cols=7):
@@ -66,11 +65,12 @@ class Game: #estado do jogo
         """
         ignores the arguments in Game\n
         use Game("", "")"""
-        assert isinstance(getattr(player1_move, "__self__", None), MCTS)
-        assert getattr(player1_move, "__func__", None) is MCTS.move
+        #im creating new classes
+        # assert isinstance(getattr(player1_move, "__self__", None), MCTS)
+        # assert getattr(player1_move, "__func__", None) is MCTS.move
 
-        assert isinstance(getattr(player2_move, "__self__", None), MCTS)
-        assert getattr(player2_move, "__func__", None) is MCTS.move
+        # assert isinstance(getattr(player2_move, "__self__", None), MCTS)
+        # assert getattr(player2_move, "__func__", None) is MCTS.move
 
         key = self.b.hash_state(self.cur_symbol)
         self.state_counts[key] = 1

@@ -23,5 +23,6 @@ eu sei que está a ficar um pouco confuso o qeu se tá a passar com os mcts:
 - (regras e heuristicas para o minimax e expansao de nós estou a colocar em *utils.py*)
 
 **o que ainda pode confundir e não me apetece mexer:**
-- o que se usa durante a simulação não é bem uma heuristica como as que tou a criar agora...
-- mcts original em players.py e o novo mcts melhor está em mcts_moves.py
+- o que se usa durante a simulação não é bem uma heuristica como as que tou a criar agora -> usar palavras diferentes?- usar simulation_policies como se fez para a expansao
+- mcts original em players.py e o novo mcts melhor está em mcts_moves.py -> melhorar a organização?
+- limpar alguns comentários e melhorar a escrita?

@@ -4,6 +4,7 @@ from game.data_storage import save_to_dataset
 import random # nao vou fazer from random import choice, para ser mais claro quando eu usar esse metodo
 from game.mcts_moves import MoveMCTS
 from game.utils import *
+from game.minimax import Minimax
 # metese aqui um dicionario ao que corresponde cada nome que se escolhe para jogar no main
 # e dps as funcoes correspondentes
 
@@ -302,5 +303,8 @@ players = {
     "mcts_new" : MoveMCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, max_iter=300).move,
     "mcts_new_exp1" : MoveMCTS(max_iter=1000, expansion_policy=get_win_or_all).move,
     "mcts_new_exp2" : MoveMCTS(max_iter=1000, expansion_policy=get_win_block_or_all).move,
-
+    "minimax" : Minimax(heuristic=heuristic3, pruning=True, max_depth=3).move,
+    "minimax4" : Minimax(heuristic=heuristic3, pruning=True, max_depth=4).move,#max_depth=5 ja comeca a ficar lento, mas é o unico que ganhou contra o mcts_new_exp2, eu tbm so exprimentei uma vez para cada um deles
+    "mcts_minimax" : MoveMCTS(max_iter=100, expansion_policy=get_win_block_or_all, use_minimax=True,
+    minimax_agent=Minimax(max_depth=3, heuristic=heuristic3, pruning=True)).move,
 }

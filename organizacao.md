@@ -26,3 +26,8 @@ eu sei que está a ficar um pouco confuso o qeu se tá a passar com os mcts:
 - o que se usa durante a simulação não é bem uma heuristica como as que tou a criar agora -> usar palavras diferentes?- usar simulation_policies como se fez para a expansao
 - mcts original em players.py e o novo mcts melhor está em mcts_moves.py -> melhorar a organização?
 - limpar alguns comentários e melhorar a escrita?
+- para a regra adicional de ciclos, nós implementamos um mapa ao nivel da simulacao e cada vez que comeca uma nova simulacao
+    esse mapa volta a comecar vazio e nao pega no mapa do jogo inteiro, seria uma possivel melhoria mas ... nao estou a ver uma maneira simples e rapida de fazer isso, temos que mudar os metodos .move todos acho eu
+    mas esta regra nao influencia muito a capacidade do mcts jogar bem, pelo menos só faz com que achasse que iria continuar a jogar na vdd empatou(o que ate agora nao esta a acontecer nas analises)
+-as ias/agentes quando estao a jogar se uma das regras adicionais de possibilidade de empatar acontecer, elas escolhem logo empatar
+(notas sobre nuances/assumpções que fizemos)

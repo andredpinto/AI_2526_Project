@@ -78,13 +78,18 @@ class MoveNode:
 #the block_win (it's not really an heuristic) needs to use the list of possible states
 class MoveMCTS:
     def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300,
-    expansion_policy=get_all_moves, cycle_detection=False, max_depth=False, depth=60):
+    expansion_policy=get_all_moves, cycle_detection=False, max_depth=False, depth=60, use_minimax=False, minimax_agent=None, normalize_minimax=True):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
            save_tree - wheter the mcts keeps the tree or not\n
            max_iter - iters for the mcts\n
-           expansion_policy - function that defines what moves will be expanded (has to return a list with the moves has tuples) utils.py
+           expansion_policy - function that defines what moves will be expanded (has to return a list with the moves has tuples) utils.py\n
+           max_depth - whether we will be stopping the simulation when it surpasses a given "depth" value\n
+           depth- what was said above\n
+           use_minimax- whether we will use minimax evaluation instead of simulation\n
+           minimax_agent= the actual minimax function\n
+            normalize_minimax= whether the minimax value is used directly on backpropagation or if its normalized to -1, 1 or 0 only
         """
         self.save_to_dataset = save_to_dataset
         self.heuristic_win = heuristic_win
@@ -97,6 +102,12 @@ class MoveMCTS:
         self.cycle_detection = cycle_detection
         self.max_depth = max_depth
         self.depth = depth
+        self.use_minimax=use_minimax
+        self.minimax_agent=minimax_agent
+        self.normalize_minimax=normalize_minimax
+        if use_minimax:
+            assert callable(self.minimax_agent.minimax)
+
 
     def sync_tree(self, board, player):
         #se for a primeira jogada do jogo, criamos a raiz do zero ou se save_tree=False
@@ -118,6 +129,16 @@ class MoveMCTS:
         self.root = MoveNode(board, player, child_limit=self.child_limit, expansion_policy=self.expansion_policy)
 
     def simulate(self, board, player):
+        if self.use_minimax:
+            score = self.minimax_agent.minimax(board, 0, -math.inf, math.inf, player)
+            if self.normalize_minimax:
+                if score > 0:
+                    return 1
+                if score < 0:
+                    return -1
+                return 0
+            else: #returns the actual value the minimax returns
+                return score
         start_player = -player # o player é o jogador que vai jogar agora, ams nos queremos avaliar para o que levou ao estado atual
         #estado inicial -> tabulerio vazio->queremos esoclher a melhor jogada para o X, mas é o O a jogar
         sim_board = board.copy()

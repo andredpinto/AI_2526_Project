@@ -78,7 +78,7 @@ class MoveNode:
 #the block_win (it's not really an heuristic) needs to use the list of possible states
 class MoveMCTS:
     def __init__(self, save_to_dataset=False, heuristic_win=False, heuristic_block_win=False,child_limit=None, save_tree=False,max_iter=300,
-    expansion_policy=get_all_moves):
+    expansion_policy=get_all_moves, cycle_detection=False, max_depth=False, depth=60):
         """save_to_dataset - whether we save the move for the dataset or not\n
            heuristic_win - whether during simulation the mcts chooses the wining state\n
            heuristic_block_win - whether during simulation the mcts doesnt chose a wining state for the oponent\n
@@ -94,6 +94,9 @@ class MoveMCTS:
         self.max_iter=max_iter
         self.root = None
         self.expansion_policy=expansion_policy
+        self.cycle_detection = cycle_detection
+        self.max_depth = max_depth
+        self.depth = depth
 
     def sync_tree(self, board, player):
         #se for a primeira jogada do jogo, criamos a raiz do zero ou se save_tree=False
@@ -119,8 +122,21 @@ class MoveMCTS:
         #estado inicial -> tabulerio vazio->queremos esoclher a melhor jogada para o X, mas é o O a jogar
         sim_board = board.copy()
 
+        moves_count=0
+        if self.cycle_detection:
+            state_counts={}
+
         while not sim_board.isFinished(player):
 
+            if self.max_depth and moves_count>=self.depth:
+                return 0 #empate
+            
+            if self.cycle_detection:
+                state_hash = sim_board.hash_state(player)
+                state_counts[state_hash] = state_counts.get(state_hash,0) +1
+                if state_counts[state_hash]==3:
+                    return 0 # empate
+            
             next_moves = sim_board.possible_moves(player)
             if not next_moves: return 0
 
@@ -164,6 +180,7 @@ class MoveMCTS:
 
             sim_board.apply_move(chosen_move[0], chosen_move[1], player)
             player *= -1
+            moves_count += 1
 #=======end while===============================================
         winner = sim_board.winner(player)
         if winner == 0:

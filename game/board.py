@@ -44,6 +44,7 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
 
     #retorna 0 se for empate e none se ainda nao tiver acabado
     def winner(self, player):
+        """player is the player playing next, because he is the only one who may be able to do a pop"""
         if self.last_move[0]==-1: return None  # No plays yet; change this if initialization is changed
         col = self.last_move[0]
         row = self.last_move[1]
@@ -86,7 +87,7 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
                 return False
         return True
 
-    def _pos_checker(self, col:int, row:int) -> bool:    # the _ supposed to represent that this is a private method
+    def _pos_checker(self, col:int, row:int, threat=False) -> bool:    # the _ supposed to represent that this is a private method
         # checks if position (col, line) contains 4 (or more) of the same elements in a row
         # assumes self.b[col][line] is a valid position
         player = self.b[col][row]
@@ -99,6 +100,8 @@ class Board: #tabuleiro de connect4 com var. de dar pop out
             result += self._checker(0, col-dir[0], row-dir[1], -dir[0], -dir[1], player)
             # checks in a certain direction and in its opposite, if total consecutive piece number is >4 returns true
             # we do row and col -dir to avoid starting position being counted again
+            if (threat):
+                if result>=3: return True
             if result >= 4: return True
         return False
 

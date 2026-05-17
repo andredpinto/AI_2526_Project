@@ -239,7 +239,7 @@ rev_move_dict = {v:k for k,v in move_dict.items()}
 import pathlib
 from joblib import load
 import numpy as np
-tree_path = pathlib.PurePath("decision_tree", "pre_trained_trees", "tree50_20.joblib")
+tree_path = pathlib.PurePath("..", "decision_tree", "pre_trained_trees", "tree50_20.joblib")
 test_tree = load(tree_path)
 
 #util for tree_move

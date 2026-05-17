@@ -27,9 +27,9 @@ class Game: #estado do jogo
                 if (winner ==0): 
                     print("Empate!!!")
                 elif (winner==1):
-                    print("Player X won")
+                    print(f"Player X won ({self.player1})")
                 else: # winner==-1
-                    print("Player O won")
+                    print(f"Player O won ({self.player2})")
                 return
 
             self.cur_symbol*=-1

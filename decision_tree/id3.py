@@ -77,7 +77,7 @@ class ID3:
         node = DTNode()
 
         # Stopping conditions (returned node is a leaf)
-        if X.size == 0 or (self.max_depth is not None and depth > self.max_depth) or y.size < self.min_samples:
+        if X.size == 0 or (self.max_depth is not None and depth > self.max_depth) or y.size < self.min_samples or get_enthropy(y)==0:
             node.set_value(get_majority(y))
             return node
         

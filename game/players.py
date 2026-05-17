@@ -237,45 +237,6 @@ from decision_tree import id3
 rev_move_dict = {v:k for k,v in move_dict.items()}
 import numpy as np
 
-##util for tree_move
-#def oh_fuck(board:Board, player, flat_board):
-#    #fiz esta versao aqui direta para ser mais direto de usar
-#    #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board
-#    valid_moves = []
-#    for col in range(board.cols):
-#        if board.is_valid_move("drop", col, player):
-#            valid_moves.append(move_dict[f"drop_{col + 1}"])
-#        if board.is_valid_move("pop", col, player):
-#            valid_moves.append(move_dict[f"pop_{col + 1}"])
-#
-#    tree_out = rev_move_dict[test_tree.predict_valid(flat_board, valid_moves, verbose=True)]
-#    move = tree_out.split("_")
-#    type = move[0]
-#    col = int(move[1])-1
-#    return type, col
-#
-#def tree_move(board:Board, player):
-#    flat_board = np.ndarray(shape = 6*7, dtype=int)
-#    point = 0
-#    for col in board.b:
-#        for piece in col:
-#            # multiplica pelo player para que o 1 represente sempre a peca de quem joga
-#            flat_board[point] = piece * player
-#            point+=1
-#    tree_out = rev_move_dict[test_tree._make_prediction(flat_board, test_tree.root)]
-#    move = tree_out.split("_")
-#    #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
-#    #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
-#    type = move[0]
-#    col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
-#    if (board.is_valid_move(type, col, player)):
-#        board.apply_move(type, col, player)
-#        return
-#    else:
-#        type, col = oh_fuck(board, player, flat_board)
-#        board.apply_move(type, col, player)
-#        return
-
 def make_id3_player(tree, name):
     """Creates a player function from a loaded ID3 tree."""
     def id3_move(board, player):

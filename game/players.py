@@ -235,52 +235,72 @@ class MCTS:
 from game.data_storage import move_dict
 from decision_tree import id3
 rev_move_dict = {v:k for k,v in move_dict.items()}
-# Loading pre trained trees
-import pathlib
-from joblib import load
 import numpy as np
-tree_path = pathlib.PurePath("..", "decision_tree", "pre_trained_trees", "tree30_20.joblib")
-test_tree = load(tree_path)
 
-#util for tree_move
-def oh_fuck(board:Board, player, flat_board):
-    #fiz esta versao aqui direta para ser mais direto de usar
-    #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board
-    valid_moves = []
-    for col in range(board.cols):
-        if board.is_valid_move("drop", col, player):
-            valid_moves.append(move_dict[f"drop_{col + 1}"])
-        if board.is_valid_move("pop", col, player):
-            valid_moves.append(move_dict[f"pop_{col + 1}"])
+##util for tree_move
+#def oh_fuck(board:Board, player, flat_board):
+#    #fiz esta versao aqui direta para ser mais direto de usar
+#    #e assim a maiara faz a funcao que ela queria fazer para retornar uma lista com moves em vez de estados no board
+#    valid_moves = []
+#    for col in range(board.cols):
+#        if board.is_valid_move("drop", col, player):
+#            valid_moves.append(move_dict[f"drop_{col + 1}"])
+#        if board.is_valid_move("pop", col, player):
+#            valid_moves.append(move_dict[f"pop_{col + 1}"])
+#
+#    tree_out = rev_move_dict[test_tree.predict_valid(flat_board, valid_moves, verbose=True)]
+#    move = tree_out.split("_")
+#    type = move[0]
+#    col = int(move[1])-1
+#    return type, col
+#
+#def tree_move(board:Board, player):
+#    flat_board = np.ndarray(shape = 6*7, dtype=int)
+#    point = 0
+#    for col in board.b:
+#        for piece in col:
+#            # multiplica pelo player para que o 1 represente sempre a peca de quem joga
+#            flat_board[point] = piece * player
+#            point+=1
+#    tree_out = rev_move_dict[test_tree._make_prediction(flat_board, test_tree.root)]
+#    move = tree_out.split("_")
+#    #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
+#    #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
+#    type = move[0]
+#    col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
+#    if (board.is_valid_move(type, col, player)):
+#        board.apply_move(type, col, player)
+#        return
+#    else:
+#        type, col = oh_fuck(board, player, flat_board)
+#        board.apply_move(type, col, player)
+#        return
 
-    tree_out = rev_move_dict[test_tree.predict_valid(flat_board, valid_moves, verbose=True)]
-    move = tree_out.split("_")
-    type = move[0]
-    col = int(move[1])-1
-    return type, col
+def make_id3_player(tree, name):
+    """Creates a player function from a loaded ID3 tree."""
+    def id3_move(board, player):
+        flat = np.empty(42, dtype=int)
+        idx = 0
+        for col in board.b:
+            for piece in col:
+                flat[idx] = piece * player
+                idx += 1
 
-def tree_move(board:Board, player):
-    flat_board = np.ndarray(shape = 6*7, dtype=int)
-    point = 0
-    for col in board.b:
-        for piece in col:
-            # multiplica pelo player para que o 1 represente sempre a peca de quem joga
-            flat_board[point] = piece * player
-            point+=1
-    tree_out = rev_move_dict[test_tree._make_prediction(flat_board, test_tree.root)]
-    move = tree_out.split("_")
-    #o is_valid_move verifica por ele proprio se o user escreve drop ou pop
-    #e vai verificar tbm se esta entre 0 e cols-1 (ou 1 e cols)
-    type = move[0]
-    col = int(move[1])-1 # converter de 1->cols(o que o user escolhe) para 0->cols-1(indices do tabuleiro)
-    if (board.is_valid_move(type, col, player)):
-        board.apply_move(type, col, player)
-        return
-    else:
-        type, col = oh_fuck(board, player, flat_board)
-        board.apply_move(type, col, player)
-        return
+        valid_ids = []
+        for col in range(board.cols):
+            if board.is_valid_move("drop", col, player):
+                valid_ids.append(move_dict[f"drop_{col + 1}"])
+            if board.is_valid_move("pop", col, player):
+                valid_ids.append(move_dict[f"pop_{col + 1}"])
 
+        pred_id = tree.predict_valid(flat, valid_ids)
+        move_str = rev_move_dict[pred_id]
+        move_type, move_col_str = move_str.split("_")
+        move_col = int(move_col_str) - 1
+        board.apply_move(move_type, move_col, player)
+
+    id3_move.__name__ = name
+    return id3_move
 
 # the functions need to be declared/imported beforehand
 players = {
@@ -294,9 +314,6 @@ players = {
         heuristic_block_win=True,
         save_tree=True
     ).move,
-
-    # Decision tree
-    "id3 in the nights": tree_move,
 
     # Melhor MoveMCTS para jogar contra humano
     "mcts_new": MoveMCTS(
@@ -351,3 +368,19 @@ players = {
         )
     ).move,
 }
+
+# adding trees to players
+from pathlib import Path
+from joblib import load
+tree_path = Path("decision_tree", "pre_trained_trees")
+max_d_list = [None, 5, 10, 20, 30]
+min_s_list = [1,5,10,20,50,100]
+
+for depth in max_d_list:
+    for min_samples in min_s_list:
+        tree_name = f"tree{depth}_{min_samples}.joblib"
+        tree = load(tree_path / tree_name)
+        tree_name = tree_name.split(".")[0]
+        players[tree_name] = make_id3_player(tree, tree_name)
+
+#print(players)

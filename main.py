@@ -38,6 +38,9 @@ def main():
 
     elif mode == 9:
         Game("human", "mcts_new_cycle").run()
+    
+    elif mode == 10:
+        Game("human", "tree20_10").run()
 
 if __name__=="__main__":
     main()

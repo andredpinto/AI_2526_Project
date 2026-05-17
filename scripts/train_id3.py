@@ -19,8 +19,8 @@ X = df.drop("move", axis=1)
 y = df["move"]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=42)
 
-max_d_list = [None, 5, 10, 50, 100]
-min_s_list = [1,2,5,10,20,50]
+max_d_list = [None, 5, 10, 20, 30]
+min_s_list = [1,5,10,20,50,100]
 save_location = Path("decision_tree", "pre_trained_trees")
 
 for max_d in max_d_list:

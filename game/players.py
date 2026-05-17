@@ -282,29 +282,72 @@ def tree_move(board:Board, player):
         return
 
 
-# the functions need to be declared beforehand
+# the functions need to be declared/imported beforehand
 players = {
-    "human" : human_move,
+    "human": human_move,
 
-    "mcts_simplest":MCTS(child_limit=8).move,
-    # "mcts_heuristic_win":MCTS(child_limit=8,heuristic_win=True).move, #selects win state during simulation
-    # "mcts_heuristic_block_win" : MCTS(child_limit=8,heuristic_block_win=True).move, #doesnt chose a move that lets the opponent win
-    # "mcts_win_and_block_win" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True).move,
-    # "mcts_tree":MCTS(child_limit=8,save_tree=True).move, #one of the above, but saving the tree
-    "mcts_full" : MCTS(child_limit=8,heuristic_win=True, heuristic_block_win=True, save_tree=True).move,#block_win deixa muito lento
+    # MCTS original
+    "mcts_simplest": MCTS(child_limit=8).move,
+    "mcts_full": MCTS(
+        child_limit=8,
+        heuristic_win=True,
+        heuristic_block_win=True,
+        save_tree=True
+    ).move,
 
-    # "mcts_select_2_children" : MCTS(child_limit=2).move,
-    # "mcts_select_4_children" : MCTS(child_limit=4).move,
-    # "mcts_select_8_children" : MCTS(child_limit=8).move,
-    # "mcts_select_8_children_more_iters" : MCTS(child_limit=8, max_iter=500).move,
-    # "mcts_select_all_children_more_iters" : MCTS(max_iter=500).move,
-    # "mcts_select_all_children" : MCTS().move #same as another mcts(for now its equal to the simplest...)
-    "id3 in the nights" : tree_move,
-    "mcts_new" : MoveMCTS(heuristic_win=True, heuristic_block_win=True, save_tree=True, max_iter=300).move,
-    "mcts_new_exp1" : MoveMCTS(max_iter=1000, expansion_policy=get_win_or_all).move,
-    "mcts_new_exp2" : MoveMCTS(max_iter=1000, expansion_policy=get_win_block_or_all).move,
-    "minimax" : Minimax(heuristic=heuristic3, pruning=True, max_depth=3).move,
-    "minimax4" : Minimax(heuristic=heuristic3, pruning=True, max_depth=4).move,#max_depth=5 ja comeca a ficar lento, mas é o unico que ganhou contra o mcts_new_exp2, eu tbm so exprimentei uma vez para cada um deles
-    "mcts_minimax" : MoveMCTS(max_iter=100, expansion_policy=get_win_block_or_all, use_minimax=True,
-    minimax_agent=Minimax(max_depth=3, heuristic=heuristic3, pruning=True)).move,
+    # Decision tree
+    "id3 in the nights": tree_move,
+
+    # Melhor MoveMCTS para jogar contra humano
+    "mcts_new": MoveMCTS(
+        max_iter=1000,
+        expansion_policy=get_win_block_or_all,
+        heuristic_win=True,
+        save_tree=True
+    ).move,
+
+    # Variante experimental com deteção de ciclos
+    "mcts_new_cycle": MoveMCTS(
+        max_iter=1000,
+        expansion_policy=get_win_block_or_all,
+        heuristic_win=True,
+        save_tree=True,
+        cycle_detection=True
+    ).move,
+
+    # Variantes usadas nas experiências de expansão
+    "mcts_new_exp1": MoveMCTS(
+        max_iter=1000,
+        expansion_policy=get_win_or_all
+    ).move,
+
+    "mcts_new_exp2": MoveMCTS(
+        max_iter=1000,
+        expansion_policy=get_win_block_or_all
+    ).move,
+
+    # Minimax
+    "minimax": Minimax(
+        heuristic=heuristic3,
+        pruning=True,
+        max_depth=3
+    ).move,
+
+    "minimax4": Minimax(
+        heuristic=heuristic3,
+        pruning=True,
+        max_depth=4
+    ).move,
+
+    # MCTS híbrido
+    "mcts_minimax": MoveMCTS(
+        max_iter=100,
+        expansion_policy=get_win_block_or_all,
+        use_minimax=True,
+        minimax_agent=Minimax(
+            max_depth=3,
+            heuristic=heuristic3,
+            pruning=True
+        )
+    ).move,
 }

@@ -233,7 +233,6 @@ class MCTS:
 
 
 from game.data_storage import move_dict
-from decision_tree import id3
 rev_move_dict = {v:k for k,v in move_dict.items()}
 import numpy as np
 

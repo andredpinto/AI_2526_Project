@@ -237,6 +237,16 @@ from decision_tree import id3
 rev_move_dict = {v:k for k,v in move_dict.items()}
 import numpy as np
 
+from pathlib import Path
+from joblib import load
+tree_path = Path("decision_tree", "pre_trained_trees")
+
+def load_tree(depth, min_samples):
+    tree_name = f"tree{depth}_{min_samples}.joblib"
+    tree = load(tree_path / tree_name)
+    tree_name = tree_name.split(".")[0]
+    players[tree_name] = make_id3_player(tree, tree_name)
+
 def make_id3_player(tree, name):
     """Creates a player function from a loaded ID3 tree."""
     def id3_move(board, player):
@@ -329,19 +339,3 @@ players = {
         )
     ).move,
 }
-
-# adding trees to players
-from pathlib import Path
-from joblib import load
-tree_path = Path("decision_tree", "pre_trained_trees")
-max_d_list = [None, 5, 10, 20, 30]
-min_s_list = [1,5,10,20,50,100]
-
-for depth in max_d_list:
-    for min_samples in min_s_list:
-        tree_name = f"tree{depth}_{min_samples}.joblib"
-        tree = load(tree_path / tree_name)
-        tree_name = tree_name.split(".")[0]
-        players[tree_name] = make_id3_player(tree, tree_name)
-
-#print(players)

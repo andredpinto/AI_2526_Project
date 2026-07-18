@@ -233,9 +233,21 @@ class MCTS:
 
 
 from game.data_storage import move_dict
-from decision_tree import id3
 rev_move_dict = {v:k for k,v in move_dict.items()}
 import numpy as np
+
+from pathlib import Path
+tree_path = Path("decision_tree", "pre_trained_trees")
+
+def load_tree(depth, min_samples):
+    name = f"tree{depth}_{min_samples}"
+    if name in players:
+        return players[name]
+
+    from joblib import load as joblib_load
+    tree = joblib_load(tree_path / f"{name}.joblib")
+    players[name] = make_id3_player(tree, name)
+    return players[name]
 
 def make_id3_player(tree, name):
     """Creates a player function from a loaded ID3 tree."""
@@ -329,19 +341,3 @@ players = {
         )
     ).move,
 }
-
-# adding trees to players
-from pathlib import Path
-from joblib import load
-tree_path = Path("decision_tree", "pre_trained_trees")
-max_d_list = [None, 5, 10, 20, 30]
-min_s_list = [1,5,10,20,50,100]
-
-for depth in max_d_list:
-    for min_samples in min_s_list:
-        tree_name = f"tree{depth}_{min_samples}.joblib"
-        tree = load(tree_path / tree_name)
-        tree_name = tree_name.split(".")[0]
-        players[tree_name] = make_id3_player(tree, tree_name)
-
-#print(players)

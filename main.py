@@ -1,4 +1,5 @@
 from game.game import Game
+from game.players import load_tree
 
 
 def read_int(prompt):
@@ -47,6 +48,7 @@ def select_id3():
 
     key = f"tree{depth}_{samples}"
     print(f"  -> {key}")
+    load_tree(depth, samples)
     return key
 
 
